@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(post_processor)
   adamantine::PostProcessor<2> post_processor(
       communicator, post_processor_database, dof_handler, mat_properties);
   dealii::LA::distributed::Vector<double> src;
-  dealii::MatrixFree<2, double> const &matrix_free =
+  dealii::CUDAWrappers::MatrixFree<2, double> const &matrix_free =
       thermal_operator.get_matrix_free();
   matrix_free.initialize_dof_vector(src);
   for (unsigned int i = 0; i < src.size(); ++i)

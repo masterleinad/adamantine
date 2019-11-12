@@ -20,13 +20,13 @@ ImplicitOperator<NumberType>::ImplicitOperator(
 
 template <typename NumberType>
 void ImplicitOperator<NumberType>::vmult(
-    dealii::LA::distributed::Vector<NumberType> &dst,
-    dealii::LA::distributed::Vector<NumberType> const &src) const
+    dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> &dst,
+    dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> const &src) const
 {
   if (_jfnk == true)
   {
-    dealii::LA::distributed::Vector<NumberType> tmp_dst(dst.get_partitioner());
-    dealii::LA::distributed::Vector<NumberType> tmp_src(src);
+    dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> tmp_dst(dst.get_partitioner());
+    dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> tmp_src(src);
     tmp_src *= (1. + 1e-10);
     _explicit_operator->vmult(dst, tmp_src);
     _explicit_operator->vmult(tmp_dst, src);
@@ -43,24 +43,24 @@ void ImplicitOperator<NumberType>::vmult(
 
 template <typename NumberType>
 void ImplicitOperator<NumberType>::Tvmult(
-    dealii::LA::distributed::Vector<NumberType> & /*dst*/,
-    dealii::LA::distributed::Vector<NumberType> const & /*src*/) const
+    dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> & /*dst*/,
+    dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> const & /*src*/) const
 {
   ASSERT_THROW_NOT_IMPLEMENTED();
 }
 
 template <typename NumberType>
 void ImplicitOperator<NumberType>::vmult_add(
-    dealii::LA::distributed::Vector<NumberType> & /*dst*/,
-    dealii::LA::distributed::Vector<NumberType> const & /*src*/) const
+    dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> & /*dst*/,
+    dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> const & /*src*/) const
 {
   ASSERT_THROW_NOT_IMPLEMENTED();
 }
 
 template <typename NumberType>
 void ImplicitOperator<NumberType>::Tvmult_add(
-    dealii::LA::distributed::Vector<NumberType> & /*dst*/,
-    dealii::LA::distributed::Vector<NumberType> const & /*src*/) const
+    dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> & /*dst*/,
+    dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> const & /*src*/) const
 {
   ASSERT_THROW_NOT_IMPLEMENTED();
 }

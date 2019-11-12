@@ -14,7 +14,7 @@
 #include "Physics.hh"
 #include "ThermalOperator.hh"
 
-#include <deal.II/base/time_stepping.h>
+#include <deal.II/base/time_stepping.templates.h>
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -72,7 +72,7 @@ public:
 
   double
   evolve_one_time_step(double t, double delta_t,
-                       dealii::LA::distributed::Vector<NumberType> &solution,
+                       dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> &solution,
                        std::vector<Timer> &timers) override;
 
   double get_delta_t_guess() const override;
@@ -90,7 +90,7 @@ public:
 
   dealii::DoFHandler<dim> &get_dof_handler() override;
 
-  dealii::AffineConstraints<double> &get_affine_constraints() override;
+  dealii::AffineConstraints<NumberType> &get_affine_constraints() override;
 
   std::shared_ptr<MaterialProperty<dim>> get_material_property() override;
 
@@ -100,7 +100,7 @@ public:
   std::vector<std::unique_ptr<ElectronBeam<dim>>> &get_electron_beams();
 
 private:
-  typedef typename dealii::LA::distributed::Vector<NumberType> LA_Vector;
+  typedef typename dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> LA_Vector;
 
   /**
    * Compute the right-hand side and apply the TermalOperator.
@@ -157,9 +157,9 @@ private:
    */
   dealii::DoFHandler<dim> _dof_handler;
   /**
-   * Associated AffineConstraints<double>.
+   * Associated AffineConstraints<NumberType>.
    */
-  dealii::AffineConstraints<double> _affine_constraints;
+  dealii::AffineConstraints<NumberType> _affine_constraints;
   /**
    * Associated quadature, either Gauss or Gauss-Lobatto.
    */
@@ -199,10 +199,10 @@ ThermalPhysics<dim, fe_degree, NumberType, QuadratureType>::get_delta_t_guess()
 
 template <int dim, int fe_degree, typename NumberType, typename QuadratureType>
 inline void ThermalPhysics<dim, fe_degree, NumberType, QuadratureType>::
-    initialize_dof_vector(
-        dealii::LA::distributed::Vector<NumberType> &vector) const
+    initialize_dof_vector(dealii::LA::distributed::Vector<NumberType> &vector) const
 {
-  _thermal_operator->get_matrix_free().initialize_dof_vector(vector);
+  //TODO
+  //_thermal_operator->get_matrix_free().initialize_dof_vector(vector);
 }
 
 template <int dim, int fe_degree, typename NumberType, typename QuadratureType>
@@ -213,7 +213,7 @@ ThermalPhysics<dim, fe_degree, NumberType, QuadratureType>::get_dof_handler()
 }
 
 template <int dim, int fe_degree, typename NumberType, typename QuadratureType>
-inline dealii::AffineConstraints<double> &
+inline dealii::AffineConstraints<NumberType> &
 ThermalPhysics<dim, fe_degree, NumberType,
                QuadratureType>::get_affine_constraints()
 {

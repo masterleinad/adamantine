@@ -20,8 +20,8 @@ set(Adamantine_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/MaterialProperty.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/NewtonSolver.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/PostProcessor.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/ThermalOperator.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/ThermalPhysics.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/ThermalOperator.cu
+    ${CMAKE_CURRENT_SOURCE_DIR}/ThermalPhysics.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/Timer.cc
   )
 
@@ -43,3 +43,4 @@ target_include_directories(Adamantine SYSTEM PUBLIC ${DEAL_II_INCLUDE_DIRS})
 target_link_libraries(Adamantine PUBLIC ${DEAL_II_LIBRARIES})
 target_link_libraries(Adamantine PUBLIC MPI::MPI_CXX)
 target_include_directories(Adamantine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+TARGET_LINK_LIBRARIES(Adamantine PUBLIC ${ADAMANTINE_CUDA_LIBRARIES})

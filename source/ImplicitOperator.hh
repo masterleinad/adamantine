@@ -29,20 +29,20 @@ public:
   dealii::types::global_dof_index n() const override;
 
   void
-  vmult(dealii::LA::distributed::Vector<NumberType> &dst,
-        dealii::LA::distributed::Vector<NumberType> const &src) const override;
+  vmult(dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> &dst,
+        dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> const &src) const override;
 
   void
-  Tvmult(dealii::LA::distributed::Vector<NumberType> &dst,
-         dealii::LA::distributed::Vector<NumberType> const &src) const override;
+  Tvmult(dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> &dst,
+         dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> const &src) const override;
 
   void vmult_add(
-      dealii::LA::distributed::Vector<NumberType> &dst,
-      dealii::LA::distributed::Vector<NumberType> const &src) const override;
+      dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> &dst,
+      dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> const &src) const override;
 
   void Tvmult_add(
-      dealii::LA::distributed::Vector<NumberType> &dst,
-      dealii::LA::distributed::Vector<NumberType> const &src) const override;
+      dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> &dst,
+      dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> const &src) const override;
 
   /**
    * Set the parameter \f$\tau\f$ defined by the Runge-Kutta method.
@@ -53,7 +53,7 @@ public:
    * Set the shared pointer of the inverse of the mass matrix.
    */
   void set_inverse_mass_matrix(
-      std::shared_ptr<dealii::LA::distributed::Vector<NumberType>>
+      std::shared_ptr<dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA>>
           inverse_mass_matrix);
 
 private:
@@ -69,7 +69,7 @@ private:
   /**
    * Shared pointer of the inverse of the mass matrix.
    */
-  std::shared_ptr<dealii::LA::distributed::Vector<NumberType>>
+  std::shared_ptr<dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA>>
       _inverse_mass_matrix;
   /**
    * Shared pointer of the operator \f$F\f$.
@@ -97,7 +97,7 @@ inline void ImplicitOperator<NumberType>::set_tau(double tau)
 
 template <typename NumberType>
 inline void ImplicitOperator<NumberType>::set_inverse_mass_matrix(
-    std::shared_ptr<dealii::LA::distributed::Vector<NumberType>>
+    std::shared_ptr<dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA>>
         inverse_mass_matrix)
 {
   _inverse_mass_matrix = inverse_mass_matrix;

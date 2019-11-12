@@ -46,8 +46,8 @@ public:
    * \param[out] dst
    */
   virtual void
-  vmult(dealii::LA::distributed::Vector<NumberType> &dst,
-        dealii::LA::distributed::Vector<NumberType> const &src) const = 0;
+  vmult(dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> &dst,
+        dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> const &src) const = 0;
 
   /**
    * Matrix-vector multiplication with the transposed matrix. This function
@@ -56,8 +56,8 @@ public:
    * \param[out] dst
    */
   virtual void
-  Tvmult(dealii::LA::distributed::Vector<NumberType> &dst,
-         dealii::LA::distributed::Vector<NumberType> const &src) const = 0;
+  Tvmult(dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> &dst,
+         dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> const &src) const = 0;
 
   /**
    * Matrix-vector multiplication and addition of the result to dst. This
@@ -67,8 +67,8 @@ public:
    * \param[inout] dst
    */
   virtual void
-  vmult_add(dealii::LA::distributed::Vector<NumberType> &dst,
-            dealii::LA::distributed::Vector<NumberType> const &src) const = 0;
+  vmult_add(dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> &dst,
+            dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> const &src) const = 0;
 
   /**
    * Matrix-vector multiplication with the transposed matrix and addition of
@@ -78,8 +78,8 @@ public:
    * \param[inout] dst
    */
   virtual void
-  Tvmult_add(dealii::LA::distributed::Vector<NumberType> &dst,
-             dealii::LA::distributed::Vector<NumberType> const &src) const = 0;
+  Tvmult_add(dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> &dst,
+             dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> const &src) const = 0;
 
   /**
    * Matrix-vector multiplication with the Jacobian. This function applies the
@@ -88,8 +88,8 @@ public:
    * \param[inout] dst
    */
   virtual void
-  jacobian_vmult(dealii::LA::distributed::Vector<NumberType> &dst,
-                 dealii::LA::distributed::Vector<NumberType> const &src) const
+  jacobian_vmult(dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> &dst,
+                 dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> const &src) const
   {
     (void)dst;
     (void)src;

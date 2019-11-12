@@ -30,7 +30,7 @@ public:
   virtual ~Physics() = default;
 
   /**
-   * Associate the AffineConstraints<double> and the MatrixFree objects to the
+   * Associate the AffineConstraints<NumberType> and the MatrixFree objects to the
    * underlying Triangulation.
    */
   virtual void setup_dofs() = 0;
@@ -47,7 +47,7 @@ public:
    */
   virtual double
   evolve_one_time_step(double t, double delta_t,
-                       dealii::LA::distributed::Vector<NumberType> &solution,
+                       dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> &solution,
                        std::vector<Timer> &timers) = 0;
 
   /**
@@ -74,9 +74,9 @@ public:
   virtual dealii::DoFHandler<dim> &get_dof_handler() = 0;
 
   /**
-   * Return the AffineConstraints<double>.
+   * Return the AffineConstraints<NumberType>.
    */
-  virtual dealii::AffineConstraints<double> &get_affine_constraints() = 0;
+  virtual dealii::AffineConstraints<NumberType> &get_affine_constraints() = 0;
 
   /**
    * Return a shared pointer of the MaterialProperty.

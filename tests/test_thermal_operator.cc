@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(thermal_operator)
   dealii::LA::distributed::Vector<double> dst_1;
   dealii::LA::distributed::Vector<double> dst_2;
 
-  dealii::MatrixFree<2, double> const &matrix_free =
+  dealii::CUDAWrappers::MatrixFree<2, double> const &matrix_free =
       thermal_operator.get_matrix_free();
   matrix_free.initialize_dof_vector(src);
   matrix_free.initialize_dof_vector(dst_1);
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(spmv)
   dealii::LA::distributed::Vector<double> dst_1;
   dealii::LA::distributed::Vector<double> dst_2;
 
-  dealii::MatrixFree<2, double> const &matrix_free =
+  dealii::CUDAWrappers::MatrixFree<2, double> const &matrix_free =
       thermal_operator.get_matrix_free();
   matrix_free.initialize_dof_vector(src);
   matrix_free.initialize_dof_vector(dst_1);

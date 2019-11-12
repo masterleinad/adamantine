@@ -9,6 +9,7 @@ include(Setupadamantine)
 include(SetupTPLs)
 INCLUDE(SetupCUDA)
 
+ENABLE_LANGUAGE(CUDA)
 SET_CUDA_LIBRARIES()
 
 add_subdirectory(application)

@@ -203,7 +203,7 @@ void ThermalPhysics<dim, fe_degree, NumberType, QuadratureType>::reinit()
 template <int dim, int fe_degree, typename NumberType, typename QuadratureType>
 double ThermalPhysics<dim, fe_degree, NumberType, QuadratureType>::
     evolve_one_time_step(double t, double delta_t,
-                         dealii::LA::distributed::Vector<NumberType> &solution,
+                         dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> &solution,
                          std::vector<Timer> &timers)
 {
   // TODO: this assume that the material properties do no change during the time
@@ -283,10 +283,10 @@ void ThermalPhysics<dim, fe_degree, NumberType, QuadratureType>::
 }
 
 template <int dim, int fe_degree, typename NumberType, typename QuadratureType>
-dealii::LA::distributed::Vector<NumberType>
+dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA>
 ThermalPhysics<dim, fe_degree, NumberType, QuadratureType>::
     evaluate_thermal_physics(
-        double const t, dealii::LA::distributed::Vector<NumberType> const &y,
+        double const t, dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> const &y,
         std::vector<Timer> &timers) const
 {
   timers[evol_time_eval_th_ph].start();
@@ -343,15 +343,15 @@ ThermalPhysics<dim, fe_degree, NumberType, QuadratureType>::
 }
 
 template <int dim, int fe_degree, typename NumberType, typename QuadratureType>
-dealii::LA::distributed::Vector<NumberType>
+dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA>
 ThermalPhysics<dim, fe_degree, NumberType, QuadratureType>::
     id_minus_tau_J_inverse(double const /*t*/, double const tau,
-                           dealii::LA::distributed::Vector<NumberType> const &y,
+                           dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> const &y,
                            std::vector<Timer> &timers) const
 {
   timers[evol_time_J_inv].start();
   _implicit_operator->set_tau(tau);
-  dealii::LA::distributed::Vector<NumberType> solution(y.get_partitioner());
+  dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> solution(y.get_partitioner());
 
   // TODO Add a geometric multigrid preconditioner.
   dealii::PreconditionIdentity preconditioner;
@@ -359,10 +359,10 @@ ThermalPhysics<dim, fe_degree, NumberType, QuadratureType>::
   dealii::SolverControl solver_control(_max_iter, _tolerance * y.l2_norm());
   // We need to inverse (I - tau M^{-1} J). While M^{-1} and J are SPD,
   // (I - tau M^{-1} J) is symmetric indefinite in the general case.
-  typename dealii::SolverGMRES<dealii::LA::distributed::Vector<NumberType>>::
+  typename dealii::SolverGMRES<dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA>>::
       AdditionalData additional_data(_max_n_tmp_vectors,
                                      _right_preconditioning);
-  dealii::SolverGMRES<dealii::LA::distributed::Vector<NumberType>> solver(
+  dealii::SolverGMRES<dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA>> solver(
       solver_control, additional_data);
   solver.solve(*_implicit_operator, solution, y, preconditioner);
 
