@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(implicit_operator)
           communicator, mat_properties);
   thermal_operator->setup_dofs(dof_handler, affine_constraints, quad);
   thermal_operator->reinit(dof_handler, affine_constraints);
-  dealii::LA::distributed::Vector<double> dummy(thermal_operator->m());
+  dealii::LA::distributed::Vector<double, dealii::MemorySpace::CUDA> dummy(thermal_operator->m());
   thermal_operator->evaluate_material_properties(dummy);
 
   // Initialize the ImplicitOperator
@@ -82,11 +82,10 @@ BOOST_AUTO_TEST_CASE(implicit_operator)
 
   // Check that ImplicitOperator with and without JFNK give the same results.
   unsigned int const size = thermal_operator->m();
-  dealii::LA::distributed::Vector<double> source(size);
-  std::shared_ptr<dealii::LA::distributed::Vector<double>> inverse_mass_matrix(
-      new dealii::LA::distributed::Vector<double>(size));
-  dealii::LA::distributed::Vector<double> dst(size);
-  dealii::LA::distributed::Vector<double> dst_jfnk(size);
+  dealii::LA::distributed::Vector<double, dealii::MemorySpace::CUDA> source(size);
+  auto inverse_mass_matrix  = std::make_shared<dealii::LA::distributed::Vector<double, dealii::MemorySpace::CUDA>>(size);
+  dealii::LA::distributed::Vector<double, dealii::MemorySpace::CUDA> dst(size);
+  dealii::LA::distributed::Vector<double, dealii::MemorySpace::CUDA> dst_jfnk(size);
   for (unsigned int i = 0; i < size; ++i)
   {
     source[i] = 1.;
