@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-project(adamantine LANGUAGES CXX VERSION 0.1.0)
+project(adamantine LANGUAGES CXX CUDA VERSION 0.1.0)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
@@ -9,7 +9,8 @@ include(Setupadamantine)
 include(SetupTPLs)
 INCLUDE(SetupCUDA)
 
-ENABLE_LANGUAGE(CUDA)
+DEAL_II_INITIALIZE_CACHED_VARIABLES()
+
 SET_CUDA_LIBRARIES()
 
 add_subdirectory(application)
