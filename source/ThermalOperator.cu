@@ -60,8 +60,7 @@ ThermalOperator<dim, fe_degree, NumberType>::ThermalOperator(
     : _communicator(communicator), _material_properties(material_properties),
       _inverse_mass_matrix(new dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA>())
 {
-/*  _matrix_free_data.tasks_parallel_scheme =
-      dealii::CUDAWrappers::MatrixFree<dim, NumberType>::AdditionalData::partition_color;*/
+_matrix_free_data.mapping_update_flags = dealii::update_values | dealii::update_gradients | dealii::update_JxW_values | dealii::update_quadrature_points;
 }
 
 template <int dim, int fe_degree, typename NumberType>
