@@ -14,9 +14,55 @@
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/lac/affine_constraints.h>
 #include <deal.II/matrix_free/cuda_matrix_free.h>
+#include <deal.II/matrix_free/cuda_fe_evaluation.h>
 
 namespace adamantine
 {
+  template <int dim, int fe_degree, typename NumberType>
+  class ThermalOperatorQuad
+{
+public:
+__device__ ThermalOperatorQuad(NumberType thermal_conductivity, NumberType alpha, NumberType beta):
+_thermal_conductivity(thermal_conductivity),
+_alpha(alpha),
+_beta(beta)
+{}
+
+__device__ void 
+operator()(dealii::CUDAWrappers::FEEvaluation<dim, fe_degree, fe_degree+1, 1, NumberType> *fe_eval) const;
+
+private:
+NumberType _thermal_conductivity;
+NumberType _alpha;
+NumberType _beta;
+};
+
+template <int dim, int fe_degree, typename NumberType>
+class LocalThermalOperator
+{
+public:
+LocalThermalOperator(NumberType *thermal_conductivity, NumberType *alpha, NumberType *beta)
+: _thermal_conductivity(thermal_conductivity),
+_alpha(alpha),
+_beta(beta)
+{}
+
+__device__ void operator()(
+    const unsigned int cell,
+    const typename dealii::CUDAWrappers::MatrixFree<dim, NumberType>::Data *gpu_data,
+    dealii::CUDAWrappers::SharedData<dim, NumberType> * shared_data,
+    const NumberType *src,
+    NumberType* dst) const;
+
+    static const unsigned int n_dofs_1d    = fe_degree + 1;
+    static const unsigned int n_local_dofs = dealii::Utilities::pow(fe_degree + 1, dim);
+    static const unsigned int n_q_points   = dealii::Utilities::pow(fe_degree + 1, dim);
+  private:
+    NumberType *_thermal_conductivity;
+NumberType *_alpha;
+NumberType *_beta;
+  };
+
 /**
  * This class is the operator associated with the heat equation, i.e., vmult
  * performs \f$ dst = -\nabla k \nabla src \f$.
@@ -113,16 +159,16 @@ private:
    * Store the \f$ \alpha \f$ coefficient described in
    * MaterialProperty::compute_constants()
    */
-  dealii::Table<2, dealii::VectorizedArray<NumberType>> _alpha;
+  dealii::LinearAlgebra::CUDAWrappers::Vector<NumberType> _alpha;
   /**
    * Store the \f$ \beta \f$ coefficient described in
    * MaterialProperty::compute_constants()
    */
-  dealii::Table<2, dealii::VectorizedArray<NumberType>> _beta;
+  dealii::LinearAlgebra::CUDAWrappers::Vector<NumberType> _beta;
   /**
    * Table of thermal conductivity coefficient.
    */
-  dealii::Table<2, dealii::VectorizedArray<NumberType>> _thermal_conductivity;
+  dealii::LinearAlgebra::CUDAWrappers::Vector<NumberType> _thermal_conductivity;
   /**
    * Material properties associated with the domain.
    */

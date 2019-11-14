@@ -15,6 +15,44 @@
 namespace adamantine
 {
 
+  template <int dim, int fe_degree, typename NumberType>
+  __device__ void ThermalOperatorQuad<dim, fe_degree, NumberType>::
+                  operator()(dealii::CUDAWrappers::FEEvaluation<dim, fe_degree, fe_degree+1, 1, NumberType> *fe_eval) const
+  {
+  dealii::Tensor<1, dim> unit_tensor;
+  for (unsigned int i = 0; i < dim; ++i)
+    unit_tensor[i] = 1.;
+
+      fe_eval->submit_gradient(-_thermal_conductivity *
+                                  (fe_eval->get_gradient() * _alpha +
+                                   unit_tensor * _beta));
+  }
+
+template <int dim, int fe_degree, typename NumberType>
+__device__ void LocalThermalOperator<dim, fe_degree, NumberType>::operator()(
+    const unsigned int cell,
+    const typename dealii::CUDAWrappers::MatrixFree<dim, NumberType>::Data *gpu_data,
+    dealii::CUDAWrappers::SharedData<dim, NumberType> * shared_data,
+    const NumberType *src,
+    NumberType* dst) const
+{
+  const unsigned int pos = dealii::CUDAWrappers::local_q_point_id<dim,NumberType>(cell, gpu_data, n_dofs_1d, n_q_points);
+  dealii::CUDAWrappers::FEEvaluation<dim, fe_degree, fe_degree + 1, 1, NumberType> fe_eval(
+      cell, gpu_data, shared_data);
+
+    // Store in a local vector the local values of src
+    fe_eval.read_dof_values(src);
+    // Evaluate the only the function gradients on the reference cell
+    fe_eval.evaluate(false, true);
+    // Apply the Jacobian of the transformation, multiply by the variable
+    // coefficients and the quadrature points
+    fe_eval.apply_for_each_quad_point(ThermalOperatorQuad<dim, fe_degree, NumberType>(_thermal_conductivity[pos], _alpha[pos], _beta[pos]));
+    // Sum over the quadrature points.
+    fe_eval.integrate(false, true);
+    fe_eval.distribute_local_to_global(dst);
+}
+
+
 template <int dim, int fe_degree, typename NumberType>
 ThermalOperator<dim, fe_degree, NumberType>::ThermalOperator(
     MPI_Comm const &communicator,
@@ -105,9 +143,9 @@ void ThermalOperator<dim, fe_degree, NumberType>::vmult_add(
     dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> &dst,
     dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> const &src) const
 {
+  LocalThermalOperator<dim, fe_degree, NumberType> thermal_operator(_thermal_conductivity.get_values(), _alpha.get_values(), _beta.get_values());
   // Execute the matrix-free matrix-vector multiplication
-  // TODO write a functor
-  // _matrix_free.cell_loop(&ThermalOperator::local_apply, this, dst, src);
+  _matrix_free.cell_loop(thermal_operator, src, dst);
 
   // Because cell_loop resolves the constraints, the constrained dofs are not
   // called they stay at zero. Thus, we need to force the value on the
@@ -124,43 +162,6 @@ void ThermalOperator<dim, fe_degree, NumberType>::Tvmult_add(
 {
   // The system of equation is symmetric so we can use vmult_add
   vmult_add(dst, src);
-}
-
-template <int dim, int fe_degree, typename NumberType>
-void ThermalOperator<dim, fe_degree, NumberType>::local_apply(
-    dealii::CUDAWrappers::MatrixFree<dim, NumberType> const &data,
-    dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> &dst,
-    dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> const &src,
-    std::pair<unsigned int, unsigned int> const &cell_range) const
-{
-//TODO
-  /*dealii::CUDAWrappers::FEEvaluation<dim, fe_degree, fe_degree + 1, 1, NumberType> fe_eval(
-      data);
-  dealii::Tensor<1, dim> unit_tensor;
-  for (unsigned int i = 0; i < dim; ++i)
-    unit_tensor[i] = 1.;
-
-  // Loop over the "cells". Note that we don't really work on a cell but on a
-  // set of quadrature point.
-  for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
-  {
-    // Reinit fe_eval on the current cell
-    fe_eval.reinit(cell);
-    // Store in a local vector the local values of src
-    fe_eval.read_dof_values(src.data());
-    // Evaluate the only the function gradients on the reference cell
-    fe_eval.evaluate(false, true);
-    // Apply the Jacobian of the transformation, multiply by the variable
-    // coefficients and the quadrature points
-    for (unsigned int q = 0; q < fe_eval.n_q_points; ++q)
-      fe_eval.submit_gradient(-_thermal_conductivity(cell, q) *
-                                  (fe_eval.get_gradient(q) * _alpha(cell, q) +
-                                   unit_tensor * _beta(cell, q)),
-                              q);
-    // Sum over the quadrature points.
-    fe_eval.integrate(false, true);
-    fe_eval.distribute_local_to_global(dst);
-  }*/
 }
 
 template <int dim, int fe_degree, typename NumberType>
