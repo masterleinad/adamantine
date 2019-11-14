@@ -51,12 +51,11 @@ BOOST_AUTO_TEST_CASE(implicit_operator)
   mat_prop_database.put("material_0.solid.thermal_conductivity", 10.);
   mat_prop_database.put("material_0.powder.thermal_conductivity", 10.);
   mat_prop_database.put("material_0.liquid.thermal_conductivity", 10.);
-  std::shared_ptr<adamantine::MaterialProperty<2>> mat_properties(
-      new adamantine::MaterialProperty<2>(
-          communicator, geometry.get_triangulation(), mat_prop_database));
+  auto mat_properties = std::make_shared<adamantine::MaterialProperty<2>>(
+          communicator, geometry.get_triangulation(), mat_prop_database);
 
   // Initialize the ThermalOperator
-  std::shared_ptr<adamantine::ThermalOperator<2, 2, double>> thermal_operator =
+  auto thermal_operator =
       std::make_shared<adamantine::ThermalOperator<2, 2, double>>(
           communicator, mat_properties);
   thermal_operator->setup_dofs(dof_handler, affine_constraints, quad);
@@ -83,14 +82,16 @@ BOOST_AUTO_TEST_CASE(implicit_operator)
   // Check that ImplicitOperator with and without JFNK give the same results.
   unsigned int const size = thermal_operator->m();
   dealii::LA::distributed::Vector<double, dealii::MemorySpace::CUDA> source(size);
+  dealii::LA::distributed::Vector<double> source_host(size);
   auto inverse_mass_matrix  = std::make_shared<dealii::LA::distributed::Vector<double, dealii::MemorySpace::CUDA>>(size);
   dealii::LA::distributed::Vector<double, dealii::MemorySpace::CUDA> dst(size);
   dealii::LA::distributed::Vector<double, dealii::MemorySpace::CUDA> dst_jfnk(size);
   for (unsigned int i = 0; i < size; ++i)
   {
-    source[i] = 1.;
-    (*inverse_mass_matrix)[i] = 1.;
+    source_host[i] = 1.;
   }
+  source.import(source_host, dealii::VectorOperation::insert);
+  inverse_mass_matrix->import(source_host, dealii::VectorOperation::insert);
 
   implicit_operator.set_tau(1.);
   implicit_operator_jfnk.set_tau(1.);

@@ -154,6 +154,7 @@ BOOST_AUTO_TEST_CASE(spmv)
   dealii::LA::distributed::Vector<double, dealii::MemorySpace::CUDA> src;
   dealii::LA::distributed::Vector<double> src_host;
   dealii::LA::distributed::Vector<double, dealii::MemorySpace::CUDA> dst_1;
+  dealii::LA::distributed::Vector<double> dst_1_host;
   dealii::LA::distributed::Vector<double, dealii::MemorySpace::CUDA> dst_2;
   dealii::LA::distributed::Vector<double> dst_2_host;
 
@@ -162,14 +163,19 @@ BOOST_AUTO_TEST_CASE(spmv)
   matrix_free.initialize_dof_vector(src);
   matrix_free.initialize_dof_vector(dst_1);
   matrix_free.initialize_dof_vector(dst_2);
+  src_host.reinit(src.get_partitioner());
+  dst_2_host.reinit(dst_2.get_partitioner());
+  dst_1_host.reinit(dst_1.get_partitioner());
 
   for (unsigned int i = 0; i < thermal_operator.m(); ++i)
   {
-    src = 0.;
-    src[i] = 1;
+    src_host = 0.;
+    src_host[i] = 1;
+    src.import(src_host, dealii::VectorOperation::insert);
     thermal_operator.vmult(dst_1, src);
+    dst_1_host.import(dst_1, dealii::VectorOperation::insert);
     sparse_matrix.vmult(dst_2_host, src_host);
     for (unsigned int j = 0; j < thermal_operator.m(); ++j)
-      BOOST_CHECK_CLOSE(dst_1[j], -dst_2[j], tolerance);
+      BOOST_CHECK_CLOSE(dst_1_host[j], -dst_2_host[j], tolerance);
   }
 }

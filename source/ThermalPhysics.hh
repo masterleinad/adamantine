@@ -78,6 +78,9 @@ public:
   double get_delta_t_guess() const override;
 
   void initialize_dof_vector(
+      dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> &vector) const override;
+
+  void initialize_dof_vector(
       dealii::LA::distributed::Vector<NumberType> &vector) const override;
 
   /**
@@ -199,10 +202,9 @@ ThermalPhysics<dim, fe_degree, NumberType, QuadratureType>::get_delta_t_guess()
 
 template <int dim, int fe_degree, typename NumberType, typename QuadratureType>
 inline void ThermalPhysics<dim, fe_degree, NumberType, QuadratureType>::
-    initialize_dof_vector(dealii::LA::distributed::Vector<NumberType> &vector) const
+    initialize_dof_vector(dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> &vector) const
 {
-  //TODO
-  //_thermal_operator->get_matrix_free().initialize_dof_vector(vector);
+  _thermal_operator->get_matrix_free().initialize_dof_vector(vector);
 }
 
 template <int dim, int fe_degree, typename NumberType, typename QuadratureType>

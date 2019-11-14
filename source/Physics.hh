@@ -59,7 +59,10 @@ public:
    * Initialize the given vector.
    */
   virtual void initialize_dof_vector(
-      dealii::LA::distributed::Vector<NumberType> &vector) const = 0;
+      dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> &vector) const = 0;
+
+  virtual void initialize_dof_vector(
+      dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::Host> &vector) const = 0;
 
   /**
    * Initialize the given vector with the given value.

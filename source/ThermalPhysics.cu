@@ -244,11 +244,26 @@ double ThermalPhysics<dim, fe_degree, NumberType, QuadratureType>::
 template <int dim, int fe_degree, typename NumberType, typename QuadratureType>
 void ThermalPhysics<dim, fe_degree, NumberType, QuadratureType>::
     initialize_dof_vector(
+        dealii::LA::distributed::Vector<NumberType> &vector) const
+{
+  // Resize the vector
+  dealii::IndexSet locally_owned_dofs = _dof_handler.locally_owned_dofs();
+  dealii::IndexSet locally_relevant_dofs;
+  dealii::DoFTools::extract_locally_relevant_dofs(_dof_handler, locally_relevant_dofs);
+  vector.reinit(locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
+}
+
+template <int dim, int fe_degree, typename NumberType, typename QuadratureType>
+void ThermalPhysics<dim, fe_degree, NumberType, QuadratureType>::
+    initialize_dof_vector(
         NumberType const value,
         dealii::LA::distributed::Vector<NumberType> &vector) const
 {
   // Resize the vector
-  initialize_dof_vector(vector);
+  dealii::IndexSet locally_owned_dofs = _dof_handler.locally_owned_dofs();
+  dealii::IndexSet locally_relevant_dofs;
+  dealii::DoFTools::extract_locally_relevant_dofs(_dof_handler, locally_relevant_dofs);
+  vector.reinit(locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
 
   // TODO this should be done in a matrix free fashion.
   // TODO this assumes that the material properties are constant
@@ -290,8 +305,8 @@ ThermalPhysics<dim, fe_degree, NumberType, QuadratureType>::
         std::vector<Timer> &timers) const
 {
   timers[evol_time_eval_th_ph].start();
-  LA_Vector value(y.get_partitioner());
-  value = 0.;
+  dealii::LinearAlgebra::distributed::Vector<NumberType> value_host(y.get_partitioner());
+  value_host = 0.;
 
   // Compute the source term.
   for (auto &beam : _electron_beams)
@@ -328,8 +343,11 @@ ThermalPhysics<dim, fe_degree, NumberType, QuadratureType>::
     }
     cell->get_dof_indices(local_dof_indices);
     _affine_constraints.distribute_local_to_global(cell_source,
-                                                   local_dof_indices, value);
+                                                   local_dof_indices, value_host);
   }
+
+  dealii::LinearAlgebra::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> value(y.get_partitioner());
+  value.import(value_host, dealii::VectorOperation::insert);
 
   // Apply the Thermal Operator.
   _thermal_operator->vmult_add(value, y);
