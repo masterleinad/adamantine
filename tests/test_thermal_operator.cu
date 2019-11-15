@@ -72,10 +72,9 @@ BOOST_AUTO_TEST_CASE(thermal_operator)
 
   dealii::CUDAWrappers::MatrixFree<2, double> const &matrix_free =
       thermal_operator.get_matrix_free();
-//TODO
-/*  matrix_free.initialize_dof_vector(src);
+  matrix_free.initialize_dof_vector(src);
   matrix_free.initialize_dof_vector(dst_1);
-  matrix_free.initialize_dof_vector(dst_2);*/
+  matrix_free.initialize_dof_vector(dst_2);
 
   src = 1.;
   thermal_operator.vmult(dst_1, src);

@@ -353,7 +353,7 @@ ThermalPhysics<dim, fe_degree, NumberType, QuadratureType>::
   _thermal_operator->vmult_add(value, y);
 
   // Multiply by the inverse of the mass matrix.
-  value.scale(*_thermal_operator->get_inverse_mass_matrix());
+  // TODO value.scale(*_thermal_operator->get_inverse_mass_matrix());
 
   timers[evol_time_eval_th_ph].stop();
 

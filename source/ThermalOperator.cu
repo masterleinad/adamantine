@@ -11,6 +11,7 @@
 #include <deal.II/base/index_set.h>
 #include <deal.II/grid/filtered_iterator.h>
 #include <deal.II/matrix_free/cuda_fe_evaluation.h>
+#include <deal.II/distributed/tria_base.h>
 
 namespace adamantine
 {
@@ -46,7 +47,11 @@ __device__ void LocalThermalOperator<dim, fe_degree, NumberType>::operator()(
     fe_eval.evaluate(false, true);
     // Apply the Jacobian of the transformation, multiply by the variable
     // coefficients and the quadrature points
-    fe_eval.apply_for_each_quad_point(ThermalOperatorQuad<dim, fe_degree, NumberType>(_thermal_conductivity[pos], _alpha[pos], _beta[pos]));
+    auto const local_thermal_conductivity = _thermal_conductivity[pos];
+    auto const local_alpha = _alpha[pos];
+    auto const local_beta = _beta[pos];
+    ThermalOperatorQuad<dim, fe_degree, NumberType> thermal_operator_quad(local_thermal_conductivity, local_alpha, local_beta);
+    fe_eval.apply_for_each_quad_point(thermal_operator_quad);
     // Sum over the quadrature points.
     fe_eval.integrate(false, true);
     fe_eval.distribute_local_to_global(dst);
@@ -169,26 +174,32 @@ void ThermalOperator<dim, fe_degree, NumberType>::evaluate_material_properties(
 {
   // Update the state of the materials
   _material_properties->update_state(*_dof_handler, state);
+  dealii::LA::distributed::Vector<NumberType> state_host(state.get_partitioner());
+  state_host.import(state, dealii::VectorOperation::insert);
 
-  // TODO setup material properties
-/*  unsigned int const n_cells = _matrix_free.n_macro_cells();
-  dealii::CUDAWrappers::FEEvaluation<dim, fe_degree, fe_degree + 1, 1, NumberType> fe_eval(
-      _matrix_free);
-  _alpha.reinit(n_cells, fe_eval.n_q_points);
-  _beta.reinit(n_cells, fe_eval.n_q_points);
-  _thermal_conductivity.reinit(n_cells, fe_eval.n_q_points);
-  for (unsigned int cell = 0; cell < n_cells; ++cell)
-    for (unsigned int q = 0; q < fe_eval.n_q_points; ++q)
-      for (unsigned int i = 0; i < _matrix_free.n_components_filled(cell); ++i)
+  const unsigned int n_owned_cells =
+    dynamic_cast<const dealii::parallel::Triangulation<dim> *>(
+      &_dof_handler->get_triangulation())
+      ->n_locally_owned_active_cells();
+
+  const unsigned int n_q_points = dealii::Utilities::pow(fe_degree+1, dim);
+
+  std::vector<NumberType> alpha_host(n_owned_cells*n_q_points);
+  std::vector<NumberType> beta_host(n_owned_cells*n_q_points);
+  std::vector<NumberType> thermal_conductivity_host(n_owned_cells*n_q_points);
+
+  unsigned int cell_no=0;
+  for (const auto& cell: _dof_handler->active_cell_iterators())
+    if (cell->is_locally_owned())
+    {
+    for (unsigned int q = 0; q < n_q_points; ++q)
       {
-        typename dealii::DoFHandler<dim>::cell_iterator cell_it =
-            _matrix_free.get_cell_iterator(cell, i);
         // Cast to Triangulation<dim>::cell_iterator to access the material_id
         typename dealii::Triangulation<dim>::active_cell_iterator cell_tria(
-            cell_it);
+            cell);
 
-        _thermal_conductivity(cell, q)[i] = _material_properties->get(
-            cell_tria, Property::thermal_conductivity, state);
+        thermal_conductivity_host[cell_no*n_q_points+q] = _material_properties->get(
+            cell_tria, Property::thermal_conductivity, state_host);
 
         double liquid_ratio = _material_properties->get_state_ratio(
             cell_tria, MaterialState::liquid);
@@ -197,11 +208,11 @@ void ThermalOperator<dim, fe_degree, NumberType>::evaluate_material_properties(
         // liquid.
         if (liquid_ratio < 1e-15)
         {
-          _alpha(cell, q)[i] =
+          alpha_host[cell_no*n_q_points+q] =
               1. /
-              (_material_properties->get(cell_tria, Property::density, state) *
+              (_material_properties->get(cell_tria, Property::density, state_host) *
                _material_properties->get(cell_tria, Property::specific_heat,
-                                         state));
+                                         state_host));
         }
         else
         {
@@ -209,22 +220,27 @@ void ThermalOperator<dim, fe_degree, NumberType>::evaluate_material_properties(
           // solid. Otherwise, we have a mix of liquid and solid (mushy zone).
           if (liquid_ratio > (1 - 1e-15))
           {
-            _alpha(cell, q)[i] =
+            alpha_host[cell_no*n_q_points+q] =
                 1. / (_material_properties->get(cell_tria, Property::density,
-                                                state) *
+                                                state_host) *
                       _material_properties->get(
-                          cell_tria, Property::specific_heat, state));
-            _beta(cell, q)[i] =
+                          cell_tria, Property::specific_heat, state_host));
+            beta_host[cell_no*n_q_points+q] =
                 _material_properties->get_liquid_beta(cell_tria);
           }
           else
           {
-            _alpha(cell, q)[i] =
+            alpha_host[cell_no*n_q_points+q] =
                 _material_properties->get_mushy_alpha(cell_tria);
-            _beta(cell, q)[i] = _material_properties->get_mushy_beta(cell_tria);
+            beta_host[cell_no*n_q_points+q] = _material_properties->get_mushy_beta(cell_tria);
           }
+          ++cell_no;
         }
-      }*/
+      }
+}
+dealii::Utilities::CUDA::copy_to_dev(thermal_conductivity_host, _thermal_conductivity.get_values());
+dealii::Utilities::CUDA::copy_to_dev(alpha_host, _alpha.get_values());
+dealii::Utilities::CUDA::copy_to_dev(beta_host, _beta.get_values());
 }
 } // namespace adamantine
 
