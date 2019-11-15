@@ -128,15 +128,16 @@ BOOST_AUTO_TEST_CASE(thermal_2d_manufactured_solution)
   physics.reinit();
 
   dealii::LA::distributed::Vector<double, dealii::MemorySpace::CUDA> solution;
-  dealii::LA::distributed::Vector<double> solution_host;
   std::vector<adamantine::Timer> timers(6);
   physics.initialize_dof_vector(solution);
   double time = physics.evolve_one_time_step(0., 0.1, solution, timers);
 
   double const tolerance = 1e-5;
   BOOST_CHECK(time == 0.1);
+  dealii::LA::distributed::Vector<double> solution_host(solution.get_partitioner());
+  solution_host.import(solution, dealii::VectorOperation::insert);
   for (unsigned int i = 0; i < solution.size(); ++i)
-    BOOST_CHECK_CLOSE(solution[i], 0.1, tolerance);
+    BOOST_CHECK_CLOSE(solution_host[i], 0.1, tolerance);
 }
 
 BOOST_AUTO_TEST_CASE(initial_temperature)

@@ -11,6 +11,7 @@
 #include <deal.II/base/index_set.h>
 #include <deal.II/grid/filtered_iterator.h>
 #include <deal.II/matrix_free/cuda_fe_evaluation.h>
+#include <deal.II/matrix_free/fe_evaluation.h>
 #include <deal.II/distributed/tria_base.h>
 
 namespace adamantine
@@ -91,10 +92,10 @@ void ThermalOperator<dim, fe_degree, NumberType>::reinit(
   mass_matrix_free.reinit(dof_handler, affine_constraints, mass_matrix_quad,
                           _matrix_free_data);
   //TODO Do we need the diagonal for preconditioning? Try without preconditioner first.
-  /* mass_matrix_free.initialize_dof_vector(*_inverse_mass_matrix);
-  dealii::VectorizedArray<NumberType> one =
+  mass_matrix_free.initialize_dof_vector(*_inverse_mass_matrix);
+  /*dealii::VectorizedArray<NumberType> one =
       dealii::make_vectorized_array(static_cast<NumberType>(1.));
-  dealii::CUDAWrappers::FEEvaluation<dim, fe_degree, fe_degree + 1, 1, NumberType> fe_eval(
+  dealii::FEEvaluation<dim, fe_degree, fe_degree + 1, 1, NumberType> fe_eval(
       mass_matrix_free);
   unsigned int const n_q_points = fe_eval.n_q_points;
   for (unsigned int cell = 0; cell < mass_matrix_free.n_macro_cells(); ++cell)
@@ -105,16 +106,19 @@ void ThermalOperator<dim, fe_degree, NumberType>::reinit(
     fe_eval.integrate(true, false);
     fe_eval.distribute_local_to_global(*_inverse_mass_matrix);
   }
-  _inverse_mass_matrix->compress(dealii::VectorOperation::add);
+  _inverse_mass_imatrix->compress(dealii::VectorOperation::add);*/
+  dealii::LinearAlgebra::distributed::Vector<NumberType> inverse_mass_matrix_host(_inverse_mass_matrix->get_partitioner());
   unsigned int const local_size = _inverse_mass_matrix->local_size();
   for (unsigned int k = 0; k < local_size; ++k)
   {
-    if (_inverse_mass_matrix->local_element(k) > 1e-15)
+    /*if (_inverse_mass_matrix->local_element(k) > 1e-15)
       _inverse_mass_matrix->local_element(k) =
           1. / _inverse_mass_matrix->local_element(k);
     else
-      _inverse_mass_matrix->local_element(k) = 0.;
-  }*/
+      _inverse_mass_matrix->local_element(k) = 0.;*/
+    inverse_mass_matrix_host.local_element(k) = 1.;
+  }
+  _inverse_mass_matrix->import(inverse_mass_matrix_host, dealii::VectorOperation::insert);
 }
 
 template <int dim, int fe_degree, typename NumberType>
@@ -185,8 +189,11 @@ void ThermalOperator<dim, fe_degree, NumberType>::evaluate_material_properties(
   const unsigned int n_q_points = dealii::Utilities::pow(fe_degree+1, dim);
 
   std::vector<NumberType> alpha_host(n_owned_cells*n_q_points);
+  _alpha.reinit(n_owned_cells*n_q_points);
   std::vector<NumberType> beta_host(n_owned_cells*n_q_points);
+  _beta.reinit(n_owned_cells*n_q_points);
   std::vector<NumberType> thermal_conductivity_host(n_owned_cells*n_q_points);
+  _thermal_conductivity.reinit(n_owned_cells*n_q_points);
 
   unsigned int cell_no=0;
   for (const auto& cell: _dof_handler->active_cell_iterators())
