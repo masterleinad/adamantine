@@ -151,9 +151,11 @@ BOOST_AUTO_TEST_CASE(ratios)
 
   // Check the material properties of the liquid
   dealii::types::global_dof_index const n_dofs = dof_handler.n_dofs();
-  dealii::LA::distributed::Vector<double> avg_enthalpy(n_dofs);
+  dealii::LA::distributed::Vector<double, dealii::MemorySpace::CUDA> avg_enthalpy(n_dofs);
+  dealii::LA::distributed::Vector<double> avg_enthalpy_host(n_dofs);
   for (unsigned int i = 0; i < n_dofs; ++i)
-    avg_enthalpy[i] = 100000.;
+    avg_enthalpy_host[i] = 100000.;
+  avg_enthalpy.import(avg_enthalpy_host, dealii::VectorOperation::insert);
   mat_prop.update_state(dof_handler, avg_enthalpy);
   for (auto cell : tria.active_cell_iterators())
   {

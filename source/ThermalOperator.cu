@@ -168,7 +168,7 @@ void ThermalOperator<dim, fe_degree, NumberType>::evaluate_material_properties(
     dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> const &state)
 {
   // Update the state of the materials
-  //_material_properties->update_state(*_dof_handler, state);
+  _material_properties->update_state(*_dof_handler, state);
 
   // TODO setup material properties
 /*  unsigned int const n_cells = _matrix_free.n_macro_cells();

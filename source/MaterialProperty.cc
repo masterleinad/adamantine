@@ -141,10 +141,12 @@ template <int dim>
 template <typename NumberType>
 void MaterialProperty<dim>::update_state(
     dealii::DoFHandler<dim> const &enthalpy_dof_handler,
-    dealii::LA::distributed::Vector<NumberType> const &enthalpy)
+    dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> const &enthalpy)
 {
-  dealii::LA::distributed::Vector<NumberType> enthalpy_average =
+  auto enthalpy_average =
       compute_average_enthalpy(enthalpy_dof_handler, enthalpy);
+  dealii::LA::distributed::Vector<NumberType> enthalpy_average_host(enthalpy_average.get_partitioner());
+  enthalpy_average_host.import(enthalpy_average, dealii::VectorOperation::insert);
 
   std::vector<dealii::types::global_dof_index> mp_dof(1);
   for (auto cell :
@@ -193,12 +195,12 @@ void MaterialProperty<dim>::update_state(
     double liquid_ratio = -1.;
     double powder_ratio = -1.;
     double solid_ratio = -1.;
-    if (enthalpy_average[dof] < solidus_enthalpy)
+    if (enthalpy_average_host[dof] < solidus_enthalpy)
       liquid_ratio = 0.;
-    else if (enthalpy_average[dof] > liquidus_enthalpy)
+    else if (enthalpy_average_host[dof] > liquidus_enthalpy)
       liquid_ratio = 1.;
     else
-      liquid_ratio = (enthalpy_average[dof] - solidus_enthalpy) / latent_heat;
+      liquid_ratio = (enthalpy_average_host[dof] - solidus_enthalpy) / latent_heat;
     // Because the powder can only become liquid, the solid can only become
     // liquid, and the liquid can only become solid, the ratio of powder can
     // only decrease.
@@ -381,15 +383,17 @@ void MaterialProperty<dim>::compute_constants()
 
 template <int dim>
 template <typename NumberType>
-dealii::LA::distributed::Vector<NumberType>
+dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA>
 MaterialProperty<dim>::compute_average_enthalpy(
     dealii::DoFHandler<dim> const &enthalpy_dof_handler,
-    dealii::LA::distributed::Vector<NumberType> const &enthalpy) const
+    dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> const &enthalpy) const
 {
   // TODO: this should probably done in a matrix-free fashion.
   // The triangulation is the same for both DoFHandler
   dealii::LA::distributed::Vector<NumberType> enthalpy_average(
       _mp_dof_handler.locally_owned_dofs(), enthalpy.get_mpi_communicator());
+  dealii::LA::distributed::Vector<NumberType> enthalpy_host(enthalpy.get_partitioner());
+  enthalpy_host.import(enthalpy, dealii::VectorOperation::insert);
   enthalpy_average = 0.;
   auto mp_cell = _mp_dof_handler.begin_active();
   auto mp_end_cell = _mp_dof_handler.end();
@@ -420,13 +424,17 @@ MaterialProperty<dim>::compute_average_enthalpy(
         {
           area += fe_values.shape_value(i, q) * fe_values.JxW(q);
           enthalpy_average[mp_dof_index] += fe_values.shape_value(i, q) *
-                                            enthalpy[enth_dof_indices[i]] *
+                                            enthalpy_host[enth_dof_indices[i]] *
                                             fe_values.JxW(q);
         }
       enthalpy_average[mp_dof_index] /= area;
     }
 
-  return enthalpy_average;
+  dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> enthalpy_average_device(
+      _mp_dof_handler.locally_owned_dofs(), enthalpy.get_mpi_communicator());
+  enthalpy_average_device.import(enthalpy_average, dealii::VectorOperation::insert);
+
+  return enthalpy_average_device;
 }
 } // namespace adamantine
 
@@ -451,14 +459,14 @@ template double MaterialProperty<3>::get(
 // Instantiate templated function: update_state
 template void MaterialProperty<2>::update_state(
     dealii::DoFHandler<2> const &,
-    dealii::LA::distributed::Vector<float> const &);
+    dealii::LA::distributed::Vector<float, dealii::MemorySpace::CUDA> const &);
 template void MaterialProperty<2>::update_state(
     dealii::DoFHandler<2> const &,
-    dealii::LA::distributed::Vector<double> const &);
+    dealii::LA::distributed::Vector<double, dealii::MemorySpace::CUDA> const &);
 template void MaterialProperty<3>::update_state(
     dealii::DoFHandler<3> const &,
-    dealii::LA::distributed::Vector<float> const &);
+    dealii::LA::distributed::Vector<float, dealii::MemorySpace::CUDA> const &);
 template void MaterialProperty<3>::update_state(
     dealii::DoFHandler<3> const &,
-    dealii::LA::distributed::Vector<double> const &);
+    dealii::LA::distributed::Vector<double, dealii::MemorySpace::CUDA> const &);
 } // namespace adamantine

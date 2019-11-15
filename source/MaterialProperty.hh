@@ -84,7 +84,7 @@ public:
   template <typename NumberType>
   void
   update_state(dealii::DoFHandler<dim> const &enthalpy_dof_handler,
-               dealii::LA::distributed::Vector<NumberType> const &enthalpy);
+               dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> const &enthalpy);
 
   /**
    * Get the array of material state vectors. The order of the different state
@@ -170,9 +170,9 @@ private:
    * Compute the average of the enthalpy on every cell.
    */
   template <typename NumberType>
-  dealii::LA::distributed::Vector<NumberType> compute_average_enthalpy(
+  dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> compute_average_enthalpy(
       dealii::DoFHandler<dim> const &enthalpy_dof_handler,
-      dealii::LA::distributed::Vector<NumberType> const &enthalpy) const;
+      dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> const &enthalpy) const;
 
   /**
    * MPI communicator.
