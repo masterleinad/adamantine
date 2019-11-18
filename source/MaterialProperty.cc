@@ -422,6 +422,8 @@ MaterialProperty<dim>::compute_average_enthalpy(
       for (unsigned int q = 0; q < n_q_points; ++q)
         for (unsigned int i = 0; i < dofs_per_cell; ++i)
         {
+          Assert(enth_dof_indices[i] < enthalpy_dof_handler.n_dofs(), dealii::ExcInternalError());
+          Assert(enth_dof_indices[i] < enthalpy_host.size(), dealii::ExcInternalError());
           area += fe_values.shape_value(i, q) * fe_values.JxW(q);
           enthalpy_average[mp_dof_index] += fe_values.shape_value(i, q) *
                                             enthalpy_host[enth_dof_indices[i]] *
