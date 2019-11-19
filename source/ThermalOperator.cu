@@ -26,7 +26,7 @@ namespace adamantine
     unit_tensor[i] = 1.;
 
       fe_eval->submit_gradient(-_thermal_conductivity *
-                                  (fe_eval->get_gradient() * _alpha +
+                                  (fe_eval->get_gradient()* _alpha +
                                    unit_tensor * _beta));
   }
 
@@ -51,6 +51,7 @@ __device__ void LocalThermalOperator<dim, fe_degree, NumberType>::operator()(
     auto const local_thermal_conductivity = _thermal_conductivity[pos];
     auto const local_alpha = _alpha[pos];
     auto const local_beta = _beta[pos];
+
     ThermalOperatorQuad<dim, fe_degree, NumberType> thermal_operator_quad(local_thermal_conductivity, local_alpha, local_beta);
     fe_eval.apply_for_each_quad_point(thermal_operator_quad);
     // Sum over the quadrature points.
@@ -271,9 +272,9 @@ void ThermalOperator<dim, fe_degree, NumberType>::evaluate_material_properties(
                 _material_properties->get_mushy_alpha(cell_tria);
             beta_host[cell_no*n_q_points+q] = _material_properties->get_mushy_beta(cell_tria);
           }
-          ++cell_no;
         }
       }
+++cell_no;
 }
 dealii::Utilities::CUDA::copy_to_dev(thermal_conductivity_host, _thermal_conductivity.get_values());
 dealii::Utilities::CUDA::copy_to_dev(alpha_host, _alpha.get_values());

@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(thermal_operator)
   BOOST_CHECK(thermal_operator.m() == thermal_operator.n());
 
   // Check matrix-vector multiplications
-  double const tolerance = 1e-15;
+  double const tolerance = 1e-10;
   dealii::LA::distributed::Vector<double, dealii::MemorySpace::CUDA> src;
   dealii::LA::distributed::Vector<double, dealii::MemorySpace::CUDA> dst_1;
   dealii::LA::distributed::Vector<double, dealii::MemorySpace::CUDA> dst_2;
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(thermal_operator)
 
   src = 1.;
   thermal_operator.vmult(dst_1, src);
-  BOOST_CHECK_CLOSE(dst_1.l1_norm(), 0., tolerance);
+  BOOST_CHECK_SMALL(dst_1.l1_norm(), tolerance);
 
   thermal_operator.Tvmult(dst_2, src);
   BOOST_CHECK_CLOSE(dst_2.l1_norm(), dst_1.l1_norm(), tolerance);
