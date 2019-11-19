@@ -87,12 +87,44 @@ void ThermalOperator<dim, fe_degree, NumberType>::reinit(
     dealii::AffineConstraints<NumberType> const &affine_constraints)
 {
   // Compute the inverse of the mass matrix
-  dealii::QGaussLobatto<1> mass_matrix_quad(fe_degree + 1);
-  dealii::CUDAWrappers::MatrixFree<dim, NumberType> mass_matrix_free;
+  dealii::QGaussLobatto<dim> mass_matrix_quad(fe_degree + 1);
+  /*dealii::CUDAWrappers::MatrixFree<dim, NumberType> mass_matrix_free;
   mass_matrix_free.reinit(dof_handler, affine_constraints, mass_matrix_quad,
-                          _matrix_free_data);
+                          _matrix_free_data);*/
   //TODO Do we need the diagonal for preconditioning? Try without preconditioner first.
-  mass_matrix_free.initialize_dof_vector(*_inverse_mass_matrix);
+//  mass_matrix_free.initialize_dof_vector(*_inverse_mass_matrix);
+  dealii::IndexSet locally_owned_dofs = dof_handler.locally_owned_dofs();
+  dealii::IndexSet locally_relevant_dofs;
+  dealii::DoFTools::extract_locally_relevant_dofs(dof_handler, locally_relevant_dofs);
+  _inverse_mass_matrix->reinit(locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
+  dealii::LinearAlgebra::distributed::Vector<NumberType> inverse_mass_matrix_host(_inverse_mass_matrix->get_partitioner());
+
+  const unsigned int n_dofs_per_cell = dof_handler.get_fe().dofs_per_cell;
+  const unsigned int n_q_points    = mass_matrix_quad.size();
+  dealii::Vector<NumberType> local_diagonal(n_dofs_per_cell);
+std::vector<dealii::types::global_dof_index> local_dof_indices(n_dofs_per_cell);
+
+dealii::FEValues<dim> fe_values(dof_handler.get_fe(), mass_matrix_quad,
+                          dealii::update_values | dealii::update_JxW_values);
+  for (const auto& cell:dof_handler.active_cell_iterators())
+if (cell->is_locally_owned())
+{
+local_diagonal =0.;
+  fe_values.reinit(cell);
+
+  for (unsigned int q=0; q<n_q_points; ++q)
+{
+for (unsigned int i=0; i<n_dofs_per_cell; ++ i)
+{
+   const auto shape_value = fe_values.shape_value(i,q);
+   local_diagonal(i) += shape_value*shape_value*fe_values.JxW(q);
+}
+}
+
+  cell->get_dof_indices(local_dof_indices);
+affine_constraints.distribute_local_to_global(local_diagonal, local_dof_indices, inverse_mass_matrix_host);
+}
+
   /*dealii::VectorizedArray<NumberType> one =
       dealii::make_vectorized_array(static_cast<NumberType>(1.));
   dealii::FEEvaluation<dim, fe_degree, fe_degree + 1, 1, NumberType> fe_eval(
@@ -107,16 +139,14 @@ void ThermalOperator<dim, fe_degree, NumberType>::reinit(
     fe_eval.distribute_local_to_global(*_inverse_mass_matrix);
   }
   _inverse_mass_imatrix->compress(dealii::VectorOperation::add);*/
-  dealii::LinearAlgebra::distributed::Vector<NumberType> inverse_mass_matrix_host(_inverse_mass_matrix->get_partitioner());
   unsigned int const local_size = _inverse_mass_matrix->local_size();
   for (unsigned int k = 0; k < local_size; ++k)
   {
-    /*if (_inverse_mass_matrix->local_element(k) > 1e-15)
-      _inverse_mass_matrix->local_element(k) =
-          1. / _inverse_mass_matrix->local_element(k);
+    if (inverse_mass_matrix_host.local_element(k) > 1e-15)
+      inverse_mass_matrix_host.local_element(k) =
+          1. / inverse_mass_matrix_host.local_element(k);
     else
-      _inverse_mass_matrix->local_element(k) = 0.;*/
-    inverse_mass_matrix_host.local_element(k) = 1.;
+      inverse_mass_matrix_host.local_element(k) = 0.;
   }
   _inverse_mass_matrix->import(inverse_mass_matrix_host, dealii::VectorOperation::insert);
 }
