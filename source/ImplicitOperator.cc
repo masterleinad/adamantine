@@ -28,11 +28,12 @@ void ImplicitOperator<NumberType>::vmult(
     dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> tmp_dst(dst.get_partitioner());
     dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> tmp_src(src.get_partitioner());
     tmp_src.import(src, dealii::VectorOperation::insert);
-    tmp_src *= (1. + 1e-10);
+    const double delta = 1.e-8;
+    tmp_src *= (1. + delta);
     _explicit_operator->vmult(dst, tmp_src);
     _explicit_operator->vmult(tmp_dst, src);
     dst -= tmp_dst;
-    dst /= 1e-10;
+    dst /= delta;
   }
   else
     _explicit_operator->jacobian_vmult(dst, src);
