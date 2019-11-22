@@ -212,15 +212,11 @@ double ThermalPhysics<dim, fe_degree, NumberType, QuadratureType>::
   _thermal_operator->evaluate_material_properties(solution);
   timers[evol_time_eval_mat_prop].stop();
 
+  using VectorType = dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA>;
+
   double time = _time_stepping->evolve_one_time_step(
-      std::bind(&ThermalPhysics<dim, fe_degree, NumberType,
-                                QuadratureType>::evaluate_thermal_physics,
-                this, std::placeholders::_1, std::placeholders::_2,
-                std::ref(timers)),
-      std::bind(&ThermalPhysics<dim, fe_degree, NumberType,
-                                QuadratureType>::id_minus_tau_J_inverse,
-                this, std::placeholders::_1, std::placeholders::_2,
-                std::placeholders::_3, std::ref(timers)),
+      std::function<VectorType(const double, const VectorType&)>([&](const double t, const VectorType& y){return this->evaluate_thermal_physics(t, y,timers);}),
+      std::function<VectorType(const double, const double, const VectorType&)>([&](const double t, const double tau, const VectorType& y){return this->id_minus_tau_J_inverse(t, tau, y,timers);}),
       t, delta_t, solution);
 
   // If the method is embedded, get the next time step. Otherwise, just use the
