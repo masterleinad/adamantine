@@ -14,6 +14,7 @@
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/numerics/matrix_tools.h>
+#include <deal.II/numerics/vector_tools.h>
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -110,6 +111,20 @@ BOOST_AUTO_TEST_CASE(spmv)
   dealii::DoFHandler<2> dof_handler(geometry.get_triangulation());
   dof_handler.distribute_dofs(fe);
   dealii::AffineConstraints<double> affine_constraints;
+  std::vector<dealii::types::global_dof_index> face_dof_indices(fe.dofs_per_face);
+  for (const auto&cell: dof_handler.active_cell_iterators())
+  {
+    for (unsigned int face_no = 0; face_no<dealii::GeometryInfo<2>::faces_per_cell; ++face_no)
+    {
+      auto face = cell->face(face_no);
+      face->get_dof_indices(face_dof_indices);
+      for (unsigned int i=0; i<face_dof_indices.size(); ++i)
+      {
+        affine_constraints.add_line(face_dof_indices[i]);
+        affine_constraints.set_inhomogeneity(face_dof_indices[i], i);
+      }
+    }
+  }
   affine_constraints.close();
   dealii::QGauss<1> quad(3);
 
@@ -145,8 +160,9 @@ BOOST_AUTO_TEST_CASE(spmv)
   dealii::SparsityPattern sparsity_pattern;
   sparsity_pattern.copy_from(dsp);
   dealii::SparseMatrix<double> sparse_matrix(sparsity_pattern);
+  dealii::Function<2> * dummy_function_ptr = nullptr;
   dealii::MatrixCreator::create_laplace_matrix(
-      dof_handler, dealii::QGauss<2>(3), sparse_matrix);
+      dof_handler, dealii::QGauss<2>(3), sparse_matrix, dummy_function_ptr, affine_constraints);
 
   // Compare vmult using matrix free and building the matrix
   double const tolerance = 1e-12;
@@ -170,8 +186,10 @@ BOOST_AUTO_TEST_CASE(spmv)
   {
     src_host = 0.;
     src_host[i] = 1;
+    affine_constraints.set_zero(src_host);
     src.import(src_host, dealii::VectorOperation::insert);
-    thermal_operator.vmult(dst_1, src);
+    thermal_operator.vmult_add(dst_1, src);
+    dst_1 -= src;
     dst_1_host.import(dst_1, dealii::VectorOperation::insert);
     sparse_matrix.vmult(dst_2_host, src_host);
     for (unsigned int j = 0; j < thermal_operator.m(); ++j)
