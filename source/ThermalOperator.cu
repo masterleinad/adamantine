@@ -213,7 +213,7 @@ void ThermalOperator<dim, fe_degree, NumberType>::evaluate_material_properties(
   state_host.import(state, dealii::VectorOperation::insert);
 
   const unsigned int n_owned_cells =
-    dynamic_cast<const dealii::parallel::Triangulation<dim> *>(
+    dynamic_cast<const dealii::parallel::TriangulationBase<dim> *>(
       &_dof_handler->get_triangulation())
       ->n_locally_owned_active_cells();
 
