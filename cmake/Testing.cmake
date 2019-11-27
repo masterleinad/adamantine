@@ -21,6 +21,12 @@ function(adamantine_ADD_BOOST_TEST TEST_NAME)
         set(NUMBER_OF_PROCESSES_TO_EXECUTE 1)
     endif()
     foreach(NPROC ${NUMBER_OF_PROCESSES_TO_EXECUTE})
+      if(${NPROC} EQUAL 1)
+        add_test(
+            NAME ${TEST_NAME}_${NPROC}
+            COMMAND ${CMAKE_BINARY_DIR}/bin/${TEST_NAME}
+        )
+      else()
         add_test(
             NAME ${TEST_NAME}_${NPROC}
             COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${NPROC} ${CMAKE_BINARY_DIR}/bin/${TEST_NAME}
@@ -28,6 +34,7 @@ function(adamantine_ADD_BOOST_TEST TEST_NAME)
         set_tests_properties(${TEST_NAME}_${NPROC} PROPERTIES
             PROCESSORS ${NPROC}
         )
+      endif()
     endforeach()
 endfunction()
 
@@ -38,11 +45,18 @@ function(adamantine_ADD_INTEGRATION_TEST TEST_NAME)
         set(NUMBER_OF_PROCESSES_TO_EXECUTE 1)
     endif()
     foreach(NPROC ${NUMBER_OF_PROCESSES_TO_EXECUTE})
+      if(${NPROC} EQUAL 1)
+        add_test(
+            NAME ${TEST_NAME}_${NPROC}
+            COMMAND ${CMAKE_BINARY_DIR}/bin/adamantine --input-file=${CMAKE_CURRENT_SOURCE_DIR}/${TEST_NAME}
+        )
+      else()
         add_test(
             NAME ${TEST_NAME}_${NPROC}
             COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${NPROC}
-                ${CMAKE_BINARY_DIR}/bin/adamantine --input-file=${CMAKE_CURRENT_SOURCE_DIR}/${TEST_NAME}
-    )
+             ${CMAKE_BINARY_DIR}/bin/adamantine --input-file=${CMAKE_CURRENT_SOURCE_DIR}/${TEST_NAME}
+        )
+      endif()    
     endforeach()
 endfunction()
 
