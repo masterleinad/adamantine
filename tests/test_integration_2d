@@ -59,10 +59,10 @@ sources
   beam_0
   {
     depth 1e-3 ; [m] maximum depth reached by the laser
-    energy_conversion_efficiency 0.5 ; number between 0 and 1
+    energy_conversion_efficiency 1 ; number between 0 and 1
     control_efficiency 0.6 ; number between 0 and 1
     diameter 1e-3 ; [m]
-    current 0.02 ; [A]
+    current 10000000 ; [A]
     voltage 60000 ; [V]
     abscissa "if(t<5e-10, 4e7*t, 0.02-4e7*(t-(5e-10)))" ; if(condition, value_if_true,
                                                         ; value_it_else)

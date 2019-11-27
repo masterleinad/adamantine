@@ -14,6 +14,7 @@
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/numerics/matrix_tools.h>
+#include <deal.II/numerics/vector_tools.h>
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -110,8 +111,17 @@ BOOST_AUTO_TEST_CASE(spmv)
   dealii::DoFHandler<2> dof_handler(geometry.get_triangulation());
   dof_handler.distribute_dofs(fe);
   dealii::AffineConstraints<double> affine_constraints;
+  dealii::VectorTools::interpolate_boundary_values(dof_handler,
+                                             0,
+                                             dealii::Functions::ConstantFunction<2>(1),
+                                             affine_constraints);
   affine_constraints.close();
   dealii::QGauss<1> quad(3);
+
+  //for (const auto& cell: dof_handler.active_cell_iterators())
+ //             for (const auto &face : cell->face_iterators())
+ //                 if (face->at_boundary())
+ //   Assert(face->boundary_id() == 0, dealii::ExcInternalError());
 
   // Create the MaterialProperty
   boost::property_tree::ptree mat_prop_database;
@@ -170,11 +180,18 @@ BOOST_AUTO_TEST_CASE(spmv)
   {
     src_host = 0.;
     src_host[i] = 1;
+    affine_constraints.set_zero(src_host);
     src.import(src_host, dealii::VectorOperation::insert);
-    thermal_operator.vmult(dst_1, src);
+    //dst_1 = 0.;
+    thermal_operator.vmult_add(dst_1, src);
+    //dst_1+=src;
+    dst_1-=src;
     dst_1_host.import(dst_1, dealii::VectorOperation::insert);
     sparse_matrix.vmult(dst_2_host, src_host);
+    affine_constraints.distribute(dst_2_host);
+    dst_1_host *= -1.;
+    affine_constraints.distribute(dst_1_host);
     for (unsigned int j = 0; j < thermal_operator.m(); ++j)
-      BOOST_CHECK_CLOSE(dst_1_host[j], -dst_2_host[j], tolerance);
+      BOOST_CHECK_CLOSE(dst_1_host[j], dst_2_host[j], tolerance);
   }
 }

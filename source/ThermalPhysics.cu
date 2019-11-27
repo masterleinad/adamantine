@@ -212,12 +212,16 @@ double ThermalPhysics<dim, fe_degree, NumberType, QuadratureType>::
   _thermal_operator->evaluate_material_properties(solution);
   timers[evol_time_eval_mat_prop].stop();
 
+  std::cout << "ThermalPhysics before solution.l2_norm(): " << solution.l2_norm() << std::endl;
+
   using VectorType = dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA>;
 
   double time = _time_stepping->evolve_one_time_step(
       std::function<VectorType(const double, const VectorType&)>([&](const double t, const VectorType& y){return this->evaluate_thermal_physics(t, y,timers);}),
       std::function<VectorType(const double, const double, const VectorType&)>([&](const double t, const double tau, const VectorType& y){return this->id_minus_tau_J_inverse(t, tau, y,timers);}),
       t, delta_t, solution);
+
+  std::cout << "ThermalPhysics after solution.l2_norm(): " << solution.l2_norm() << std::endl;
 
   // If the method is embedded, get the next time step. Otherwise, just use the
   // current time step.
@@ -345,11 +349,13 @@ ThermalPhysics<dim, fe_degree, NumberType, QuadratureType>::
   dealii::LinearAlgebra::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> value(y.get_partitioner());
   value.import(value_host, dealii::VectorOperation::insert);
 
+  std::cout << "before thermal operator: " << value.l2_norm() << std::endl;
   // Apply the Thermal Operator.
   _thermal_operator->vmult_add(value, y);
+  std::cout << "after thermal operator" << value.l2_norm() << std::endl;
 
   // Multiply by the inverse of the mass matrix.
-  // TODO value.scale(*_thermal_operator->get_inverse_mass_matrix());
+  value.scale(*_thermal_operator->get_inverse_mass_matrix());
 
   timers[evol_time_eval_th_ph].stop();
 

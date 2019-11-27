@@ -453,7 +453,10 @@ void run(
   ++n_time_step;
 
   dealii::LA::distributed::Vector<double, dealii::MemorySpace::CUDA> solution_device(solution_host.get_partitioner());
+  std::cout << "initial solution_host.l2_norm(): " << solution_host.l2_norm() << std::endl;
   solution_device.import(solution_host, dealii::VectorOperation::insert);
+  std::cout << "initial solution_device.l2_norm(): " << solution_device.l2_norm() << std::endl;
+
   bool const verbose_refinement = refinement_database.get("verbose", false);
   unsigned int const time_steps_refinement =
       refinement_database.get("time_steps_between_refinement", 10);
@@ -469,7 +472,7 @@ void run(
     // Refine the mesh after time_steps_refinement time steps or when time is
     // greater or equal than the next predicted time for refinement. This is
     // necessary when using an embedded method.
-    if (((n_time_step % time_steps_refinement) == 0) ||
+  /*  if (((n_time_step % time_steps_refinement) == 0) ||
         (time >= next_refinement_time))
     {
       next_refinement_time = time + time_steps_refinement * time_step;
@@ -483,13 +486,16 @@ void run(
       if ((rank == 0) && (verbose_refinement == true))
         std::cout << "n_dofs: " << thermal_physics->get_dof_handler().n_dofs()
                   << std::endl;
-    }
+    }*/
 
     // time can be different than time + time_step if an embedded scheme is
     // used.
     timers[adamantine::evol_time].start();
+    std::cout << "before solution_device.l2_norm(): " << solution_device.l2_norm() << std::endl;
+
     time = thermal_physics->evolve_one_time_step(time, time_step, solution_device,
-                                                 timers);
+                                                 timers);    
+    std::cout << "after solution_device.l2_norm(): " << solution_device.l2_norm() << std::endl;
     timers[adamantine::evol_time].stop();
 
     // Get the new time step
@@ -509,7 +515,9 @@ void run(
     }
 
     // Output the solution
+    std::cout << "solution_device.l2_norm(): " << solution_device.l2_norm() << std::endl;
     solution_host.import(solution_device, dealii::VectorOperation::insert);
+    std::cout << "solution_host.l2_norm(): " << solution_host.l2_norm() << std::endl;
     affine_constraints.distribute(solution_host);
     post_processor.output_pvtu(cycle, n_time_step, time, solution_host);
     ++n_time_step;

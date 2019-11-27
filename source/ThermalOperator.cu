@@ -165,7 +165,8 @@ void ThermalOperator<dim, fe_degree, NumberType>::vmult(
     dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> const &src) const
 {
   dst = 0.;
-  vmult_add(dst, src);
+  LocalThermalOperator<dim, fe_degree, NumberType> thermal_operator(_thermal_conductivity.get_values(), _alpha.get_values(), _beta.get_values());
+  _matrix_free.cell_loop(thermal_operator, src, dst);
 }
 
 template <int dim, int fe_degree, typename NumberType>
@@ -173,8 +174,7 @@ void ThermalOperator<dim, fe_degree, NumberType>::Tvmult(
     dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> &dst,
     dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> const &src) const
 {
-  dst = 0.;
-  Tvmult_add(dst, src);
+  vmult(dst, src);
 }
 
 template <int dim, int fe_degree, typename NumberType>
@@ -182,16 +182,25 @@ void ThermalOperator<dim, fe_degree, NumberType>::vmult_add(
     dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> &dst,
     dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> const &src) const
 {
+  vmult(dst, src);
+  std::cout << "in thermal operator 1 " << dst.l2_norm() << std::endl;
+  dst += src;
+  std::cout << "in thermal operator 2 " << dst.l2_norm() << std::endl;
+/*  dealii::LA::distributed::Vector<NumberType, dealii::MemorySpace::CUDA> result(dst.get_partitioner());
+  result = 0;
   LocalThermalOperator<dim, fe_degree, NumberType> thermal_operator(_thermal_conductivity.get_values(), _alpha.get_values(), _beta.get_values());
   // Execute the matrix-free matrix-vector multiplication
-  _matrix_free.cell_loop(thermal_operator, src, dst);
+  _matrix_free.cell_loop(thermal_operator, src, result);*/
 
   // Because cell_loop resolves the constraints, the constrained dofs are not
   // called they stay at zero. Thus, we need to force the value on the
   // constrained dofs by hand. The variable scaling is used so that we get the
   // right order of magnitude.
   // TODO: for now the value of scaling is set to 1
-  _matrix_free.copy_constrained_values(src, dst);
+  //_matrix_free.copy_constrained_values(src, dst);
+  std::cout << "in thermal operator 3 " << dst.l2_norm() << std::endl;
+  /*dst = result;
+  dst += src;*/
 }
 
 template <int dim, int fe_degree, typename NumberType>
@@ -238,6 +247,7 @@ void ThermalOperator<dim, fe_degree, NumberType>::evaluate_material_properties(
 
         thermal_conductivity_host[cell_no*n_q_points+q] = _material_properties->get(
             cell_tria, Property::thermal_conductivity, state_host);
+//        std::cout << "thermal_conductivity[" << cell_no*n_q_points+q << "]: " << thermal_conductivity_host[cell_no*n_q_points+q] << std::endl; 
 
         double liquid_ratio = _material_properties->get_state_ratio(
             cell_tria, MaterialState::liquid);
@@ -251,6 +261,7 @@ void ThermalOperator<dim, fe_degree, NumberType>::evaluate_material_properties(
               (_material_properties->get(cell_tria, Property::density, state_host) *
                _material_properties->get(cell_tria, Property::specific_heat,
                                          state_host));
+  //        std::cout << "alpha_host[" << cell_no*n_q_points+q << "]: " << alpha_host[cell_no*n_q_points+q] << std::endl;
         }
         else
         {
