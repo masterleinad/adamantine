@@ -126,6 +126,7 @@ template <int dim, int p_order, typename MaterialStates,
 void MechanicalPhysics<dim, p_order, MaterialStates,
                        MemorySpaceType>::prepare_transfer_mpi()
 {
+	std::cout << "before transfer: " <<  _old_displacement.l2_norm() << '\n';
   const dealii::IndexSet &locally_owned_dofs =
       _dof_handler.locally_owned_dofs();
   const dealii::IndexSet locally_relevant_dofs =
@@ -246,6 +247,8 @@ void MechanicalPhysics<dim, p_order, MaterialStates,
     }
     ++cell_id;
   }
+      _old_displacement.compress(dealii::VectorOperation::insert);
+          std::cout << "after transfer: " <<  _old_displacement.l2_norm() << '\n';
 }
 
 template <int dim, int p_order, typename MaterialStates,
@@ -258,6 +261,8 @@ void MechanicalPhysics<dim, p_order, MaterialStates, MemorySpaceType>::
         std::vector<bool> const &has_melted,
         std::vector<std::shared_ptr<BodyForce<dim>>> const &body_forces)
 {
+  std::cout << "before setup dofs: " <<  _old_displacement.l2_norm() << std::endl;
+
   _mechanical_operator->update_temperature(thermal_dof_handler, temperature,
                                            has_melted);
   // Update the active fe indices, the plastic variables, and the displacement.
@@ -400,6 +405,7 @@ void MechanicalPhysics<dim, p_order, MaterialStates, MemorySpaceType>::
 
     _old_displacement.compress(dealii::VectorOperation::insert);
   }
+  std::cout << "after setup dofs: " <<  _old_displacement.l2_norm() << std::endl;
 }
 
 template <int dim, int p_order, typename MaterialStates,
@@ -422,12 +428,17 @@ MechanicalPhysics<dim, p_order, MaterialStates, MemorySpaceType>::solve()
   dealii::SolverCG<
       dealii::LA::distributed::Vector<double, dealii::MemorySpace::Host>>
       cg(solver_control);
+
+   std::cout << "solve:rhs: " << _mechanical_operator->rhs().l2_norm() << '\n';
+
   // FIXME Use better preconditioner
   dealii::TrilinosWrappers::PreconditionSSOR preconditioner;
   preconditioner.initialize(_mechanical_operator->system_matrix());
   cg.solve(_mechanical_operator->system_matrix(), displacement,
            _mechanical_operator->rhs(), preconditioner);
   _affine_constraints.distribute(displacement);
+
+  std::cout << "solve:disp: " << displacement.l2_norm() << '\n';
 
   // Compute the new stress assuming the deformation is elastic.
   // If the stress is under the yield criterion, the deformation is elastic and
