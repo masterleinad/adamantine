@@ -231,8 +231,6 @@ void MechanicalOperator<dim, p_order, MaterialStates, MemorySpaceType>::
       }
     }
 
-    //_temperature.print(std::cout);
-
 _temperature.update_ghost_values();
 
     std::vector<dealii::types::global_dof_index> temperature_local_dof_indices(
@@ -285,19 +283,6 @@ _temperature.update_ghost_values();
         auto B = dealii::Physics::Elasticity::StandardTensors<dim>::I;
         B *= (3. * lambda + 2 * mu) * alpha * delta_T;
 
-	if (cell->active_cell_index()==12)
-      {
-      	      std::cout << "cell: " << cell->active_cell_index() << " q: " << q_point 
-		  << " B: " << B << " delta_T: " << delta_T << " reference_temperature: " << reference_temperature 
-		  << " alpa: " << alpha << " lambda: " << lambda << " max: " << 300*temperature_fe_values.dofs_per_cell << '\n'; 
-	       double delta = 0;
- for (unsigned int j = 0; j < temperature_fe_values.dofs_per_cell; ++j)
-        {
-                 // std::cout << "fe_value: " << temperature_fe_values.shape_value(j, q_point) << " temp: " << temperature_local_dof_indices[j] << ": " << _temperature(temperature_local_dof_indices[j]) << '\n';
-  delta += temperature_fe_values.shape_value(j, q_point) *
-                     _temperature(temperature_local_dof_indices[j]);
- 	}
- std::cout << "delta: " << delta << std::endl;
       }
         for (auto const i : fe_values.dof_indices())
         {
