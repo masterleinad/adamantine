@@ -379,7 +379,8 @@ void MechanicalPhysics<dim, p_order, MaterialStates, MemorySpaceType>::
   // Update _old_displacement if necessary
   const dealii::IndexSet locally_relevant_dofs =
       dealii::DoFTools::extract_locally_relevant_dofs(_dof_handler);
-  _old_displacement.reinit(_dof_handler.locally_owned_dofs(),
+  const dealii::IndexSet locally_owned_dofs = _dof_handler.locally_owned_dofs();
+	 _old_displacement.reinit(locally_owned_dofs,
                            locally_relevant_dofs, MPI_COMM_WORLD);
 
   if (saved_old_displacement.size())
@@ -395,6 +396,7 @@ void MechanicalPhysics<dim, p_order, MaterialStates, MemorySpaceType>::
           cell->get_dof_indices(global_dof_indices);
           for (unsigned int i = 0; i < n_dofs_per_cell; ++i)
           {
+		  if(locally_owned_dofs.is_element(global_dof_indices[i]))
             _old_displacement[global_dof_indices[i]] =
                 saved_old_displacement[cell_id][i];
           }

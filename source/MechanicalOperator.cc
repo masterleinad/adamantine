@@ -192,6 +192,8 @@ void MechanicalOperator<dim, p_order, MaterialStates, MemorySpaceType>::
   // thermo-elastic problem.
   if (_reference_temperatures.size() > 0)
   {
+    std::cout << "reference_temperature.size(): " << _reference_temperatures.size() << '\n';
+    std::cout << "_temperature: " << _temperature.l2_norm() << '\n';
     // Create temperature hp::FEValues using the same finite elements as the
     // thermal simulation but evaluated at the quadrature points of the
     // mechanical simulations.
@@ -228,6 +230,10 @@ void MechanicalOperator<dim, p_order, MaterialStates, MemorySpaceType>::
         ++cell_index;
       }
     }
+
+    //_temperature.print(std::cout);
+
+_temperature.update_ghost_values();
 
     std::vector<dealii::types::global_dof_index> temperature_local_dof_indices(
         _thermal_dof_handler->get_fe_collection().max_dofs_per_cell());
@@ -279,6 +285,20 @@ void MechanicalOperator<dim, p_order, MaterialStates, MemorySpaceType>::
         auto B = dealii::Physics::Elasticity::StandardTensors<dim>::I;
         B *= (3. * lambda + 2 * mu) * alpha * delta_T;
 
+	if (cell->active_cell_index()==12)
+      {
+      	      std::cout << "cell: " << cell->active_cell_index() << " q: " << q_point 
+		  << " B: " << B << " delta_T: " << delta_T << " reference_temperature: " << reference_temperature 
+		  << " alpa: " << alpha << " lambda: " << lambda << " max: " << 300*temperature_fe_values.dofs_per_cell << '\n'; 
+	       double delta = 0;
+ for (unsigned int j = 0; j < temperature_fe_values.dofs_per_cell; ++j)
+        {
+                 // std::cout << "fe_value: " << temperature_fe_values.shape_value(j, q_point) << " temp: " << temperature_local_dof_indices[j] << ": " << _temperature(temperature_local_dof_indices[j]) << '\n';
+  delta += temperature_fe_values.shape_value(j, q_point) *
+                     _temperature(temperature_local_dof_indices[j]);
+ 	}
+ std::cout << "delta: " << delta << std::endl;
+      }
         for (auto const i : fe_values.dof_indices())
         {
           cell_rhs(i) += dealii::scalar_product(
@@ -292,6 +312,8 @@ void MechanicalOperator<dim, p_order, MaterialStates, MemorySpaceType>::
           cell_rhs, local_dof_indices, assembled_rhs);
     }
   }
+
+  std::cout << "assembled_rhs1: " << assembled_rhs.l2_norm() << std::endl;  
 
   // Add gravitational body force
   if (body_forces.size())
@@ -329,6 +351,8 @@ void MechanicalOperator<dim, p_order, MaterialStates, MemorySpaceType>::
 
   _system_matrix.compress(dealii::VectorOperation::add);
   assembled_rhs.compress(dealii::VectorOperation::add);
+
+  std::cout << "assembled_rhs: " << assembled_rhs.l2_norm() << '\n';
 
   // When solving the system, we don't want ghost entries
   _system_rhs.reinit(_dof_handler->locally_owned_dofs(), _communicator);
