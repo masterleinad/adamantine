@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(integration_thermoelastic, *utf::tolerance(1.0e-5))
   // To generate a new gold solution
   // std::cout << "dis l2:" << displacement.l2_norm() << std::endl;
 
-  BOOST_TEST(displacement.l2_norm() == 5.7437202132433114e-16);
+  BOOST_TEST(displacement.l2_norm() == 0.21537566016824577);
 }
 
 BOOST_AUTO_TEST_CASE(integration_thermoelastic_add_material,
@@ -74,5 +74,5 @@ BOOST_AUTO_TEST_CASE(integration_thermoelastic_add_material,
   // For now doing a simple regression test. Without a dof handler, it's hard to
   // do something more meaningful with the vector.
 
-  BOOST_TEST(displacement.l2_norm() == 4.6141029982203296e-16);
+  BOOST_TEST(displacement.l2_norm() == 0.355534971638);
 }

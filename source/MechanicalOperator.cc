@@ -283,7 +283,6 @@ _temperature.update_ghost_values();
         auto B = dealii::Physics::Elasticity::StandardTensors<dim>::I;
         B *= (3. * lambda + 2 * mu) * alpha * delta_T;
 
-      }
         for (auto const i : fe_values.dof_indices())
         {
           cell_rhs(i) += dealii::scalar_product(
