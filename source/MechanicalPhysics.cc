@@ -110,8 +110,8 @@ void MechanicalPhysics<dim, n_materials, p_order, MaterialStates,
     setup_dofs(std::vector<std::shared_ptr<BodyForce<dim>>> const &body_forces,
                bool const fe_indices_have_changed)
 {
-  dealii::IndexSet old_locally_owned_dofs = _dof_handler.locally_owned_dofs();
-  dealii::IndexSet old_locally_relevant_dofs =
+	dealii::IndexSet old_locally_owned_dofs = _dof_handler.n_dofs()==0?dealii::IndexSet{}:_dof_handler.locally_owned_dofs();
+  dealii::IndexSet old_locally_relevant_dofs = _dof_handler.n_dofs()==0?dealii::IndexSet{}:
       dealii::DoFTools::extract_locally_relevant_dofs(_dof_handler);
 
   _dof_handler.distribute_dofs(_fe_collection);
@@ -464,6 +464,7 @@ MechanicalPhysics<dim, n_materials, p_order, MaterialStates,
 #ifdef ADAMANTINE_WITH_CALIPER
   CALI_MARK_BEGIN("solve mechanical system");
 #endif
+  Kokkos::Profiling::ScopedRegion region("MechanicalPhysics::solve");
 
   dealii::IndexSet locally_owned_dofs = _dof_handler.locally_owned_dofs();
   dealii::IndexSet locally_relevant_dofs =

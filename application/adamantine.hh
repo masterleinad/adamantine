@@ -563,6 +563,7 @@ compute_cells_to_refine(
   double const bounding_box_scaling = 2.0;
   std::vector<dealii::BoundingBox<dim>> heat_source_bounding_boxes;
   heat_source_bounding_boxes.reserve(n_time_steps * heat_sources.size());
+  std::cout << "XXX: before time loop: " << n_time_steps << std::endl;
   for (unsigned int i = 0; i < n_time_steps; ++i)
   {
     double const current_time = time + static_cast<double>(i) /
@@ -576,6 +577,7 @@ compute_cells_to_refine(
           beam->get_bounding_box(current_time, bounding_box_scaling));
     }
   }
+  std::cout << "XXX: after time loop" << std::endl;
 
   // Perform the search with ArborX. Since we are only interested in locally
   // owned cells, we use BVH.

@@ -86,6 +86,7 @@ void MechanicalOperator<dim, n_materials, p_order, MaterialStates,
 #ifdef ADAMANTINE_WITH_CALIPER
   CALI_MARK_BEGIN("assemble mechanical system");
 #endif
+  Kokkos::Profiling::ScopedRegion region("MechanicalOperator::assemble_system");
 
   // Create the sparsity pattern. Since we use a Trilinos matrix we don't need
   // the sparsity pattern to outlive the sparse matrix.
@@ -103,6 +104,9 @@ void MechanicalOperator<dim, n_materials, p_order, MaterialStates,
 
   if (discretization_has_changed)
   {
+	  #ifdef ADAMANTINE_WITH_CALIPER
+  CALI_MARK_BEGIN("assemble mechanical matrix");
+#endif
     dealii::DynamicSparsityPattern dsp(locally_relevant_dofs);
     dealii::DoFTools::make_sparsity_pattern(*_dof_handler, dsp,
                                             *_affine_constraints, false);
@@ -110,6 +114,7 @@ void MechanicalOperator<dim, n_materials, p_order, MaterialStates,
         dsp, locally_owned_dofs, _communicator, locally_relevant_dofs);
 
     _system_matrix.reinit(locally_owned_dofs, dsp, _communicator);
+    std::cout << "reinit done" << std::endl;
 
     dealii::hp::FEValues<dim> displacement_hp_fe_values(
         _dof_handler->get_fe_collection(), *_q_collection,
@@ -164,6 +169,9 @@ void MechanicalOperator<dim, n_materials, p_order, MaterialStates,
       _affine_constraints->distribute_local_to_global(
           cell_matrix, local_dof_indices, _system_matrix);
     }
+    #ifdef ADAMANTINE_WITH_CALIPER
+  CALI_MARK_END("assemble mechanical matrix");
+#endif
   }
 
   // Assemble the rhs
@@ -174,6 +182,9 @@ void MechanicalOperator<dim, n_materials, p_order, MaterialStates,
   // thermo-elastic problem.
   if (_reference_temperatures.size() > 0)
   {
+	      #ifdef ADAMANTINE_WITH_CALIPER
+  CALI_MARK_BEGIN("update temperature");
+#endif
     // Create temperature hp::FEValues using the same finite elements as the
     // thermal simulation but evaluated at the quadrature points of the
     // mechanical simulations.
@@ -212,7 +223,13 @@ void MechanicalOperator<dim, n_materials, p_order, MaterialStates,
     }
 
     _temperature.update_ghost_values();
+    #ifdef ADAMANTINE_WITH_CALIPER
+  CALI_MARK_END("update temperature");
+#endif
 
+    #ifdef ADAMANTINE_WITH_CALIPER
+  CALI_MARK_BEGIN("assemble rhs I");
+#endif
     std::vector<dealii::types::global_dof_index> temperature_local_dof_indices(
         _thermal_dof_handler->get_fe_collection().max_dofs_per_cell());
     double const initial_temperature = _reference_temperatures.back();
@@ -260,14 +277,15 @@ void MechanicalOperator<dim, n_materials, p_order, MaterialStates,
           delta_T += temperature_fe_values.shape_value(j, q_point) *
                      _temperature(temperature_local_dof_indices[j]);
         }
-        auto B = dealii::Physics::Elasticity::StandardTensors<dim>::I;
-        B *= (3. * lambda + 2 * mu) * alpha * delta_T;
+        auto const B = (3. * lambda + 2 * mu) * alpha * delta_T;
 
         for (auto const i : fe_values.dof_indices())
         {
-          cell_rhs(i) += dealii::scalar_product(
-                             B, fe_values[displacements].gradient(i, q_point)) *
-                         fe_values.JxW(q_point);
+          auto local_rhs = 0.;
+	  auto fe_val = fe_values[displacements].gradient(i, q_point);
+          for (auto c = 0; c < dim; ++c)
+            local_rhs += fe_val[c][c];
+	  cell_rhs(i) += local_rhs * B* fe_values.JxW(q_point);
         }
       }
 
@@ -276,10 +294,16 @@ void MechanicalOperator<dim, n_materials, p_order, MaterialStates,
           cell_rhs, local_dof_indices, assembled_rhs);
     }
   }
+    #ifdef ADAMANTINE_WITH_CALIPER
+  CALI_MARK_END("assemble rhs I");
+#endif
 
   // Add gravitational body force
   if (body_forces.size())
   {
+	      #ifdef ADAMANTINE_WITH_CALIPER
+  CALI_MARK_BEGIN("assemble rhs body forces");
+#endif
     for (auto const &cell : _dof_handler->active_cell_iterators() |
                                 dealii::IteratorFilters::ActiveFEIndexEqualTo(
                                     0, /* locally owned */ true))
@@ -309,6 +333,9 @@ void MechanicalOperator<dim, n_materials, p_order, MaterialStates,
       _affine_constraints->distribute_local_to_global(
           cell_rhs, local_dof_indices, assembled_rhs);
     }
+                  #ifdef ADAMANTINE_WITH_CALIPER
+  CALI_MARK_END("assemble rhs body forces");
+#endif
   }
 
   _system_matrix.compress(dealii::VectorOperation::add);
