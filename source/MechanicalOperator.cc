@@ -98,8 +98,8 @@ void MechanicalOperator<dim, n_materials, p_order, MaterialStates,
 
   _system_matrix.reinit(locally_owned_dofs, dsp, _communicator);
 
-  dealii::hp::FEValues<dim> displacement_hp_fe_values(
-      _dof_handler->get_fe_collection(), *_q_collection,
+  dealii::FEValues<dim> displacement_hp_fe_values(
+      _dof_handler->get_fe_collection()[0], _q_collection[0],
       dealii::update_values | dealii::update_gradients |
           dealii::update_JxW_values);
 
