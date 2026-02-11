@@ -22,10 +22,17 @@ namespace adamantine
 {
 namespace
 {
-ArborX::ExperimentalHyperGeometry::Point<3, double>
-read_point(char const *facet, double const unit_scaling)
+#if ARBORX_VERSION_MAJOR >= 2
+using Point = ArborX::Point<3, double>;
+using Triangle = ArborX::Triangle<3, double>;
+#else
+using Point = ArborX::ExperimentalHyperGeometry::Point<3, double>;
+using Triangle = ArborX::ExperimentalHyperGeometry::Triangle<3, double>;
+#endif
+
+Point read_point(char const *facet, double const unit_scaling)
 {
-  ArborX::ExperimentalHyperGeometry::Point<3, double> vertex;
+  Point vertex;
   float value = 0;
 
   std::memcpy(&value, facet, sizeof value);
@@ -37,6 +44,36 @@ read_point(char const *facet, double const unit_scaling)
 
   return vertex;
 }
+
+#if ARBORX_VERSION_MAJOR >= 2
+struct InsideCallBack
+{
+  template <typename Predicate, typename Value, typename OutputFunctor>
+  KOKKOS_FUNCTION void operator()(const Predicate &predicate,
+                                  const Value &value,
+                                  const OutputFunctor &out) const
+  {
+    auto p = ArborX::getGeometry(predicate);
+#if ARBORX_VERSION_MINOR * 100 + ARBORX_VERSION_PATCH >= 99
+    auto a = ArborX::Experimental::closestPoint(p, value);
+#else
+    auto a = ArborX::Details::Dispatch::distance<
+        ArborX::GeometryTraits::PointTag, ArborX::GeometryTraits::TriangleTag,
+        decltype(p), Value>::closest_point(p, value.a, value.b, value.c);
+#endif
+
+    auto pa = a - p;
+    auto e1 = value.b - value.a;
+    auto e2 = value.c - value.a;
+    double x = e1[1] * e2[2] - e2[1] * e1[2];
+    double y = -(e1[0] * e2[2] - e2[0] * e1[2]);
+    double z = e1[0] * e2[1] - e2[0] * e1[1];
+
+    bool v = pa[0] * x + pa[1] * y + pa[2] * z > 0.;
+    out(v);
+  }
+};
+#endif
 } // namespace
 
 template <int dim>
@@ -183,8 +220,64 @@ Geometry<dim>::Geometry(
             ? units_optional_database.get().get("mesh", "meter")
             : "meter";
     read_stl(*stl_filename, g_unit_scaling_factor[stl_unit]);
+#if ARBORX_VERSION_MAJOR >= 2
+    _bvh = std::make_unique<ArborX::BVH<Kokkos::HostSpace, Triangle>>(
+        Kokkos::DefaultHostExecutionSpace{}, _stl_triangles);
+#endif
   }
 }
+
+#if ARBORX_VERSION_MAJOR >= 2
+template <int dim>
+bool Geometry<dim>::is_within_stl(
+    typename dealii::DoFHandler<dim>::active_cell_iterator const &cell) const
+{
+  if constexpr (dim == 2)
+  {
+    return false;
+  }
+  else
+  {
+    ASSERT(_bvh, "BVH not initialized.");
+
+    // First we need to filter out the cells that intersects the triangles. The
+    // center of the cells may be within the STL shape which will create a false
+    // positive.
+    Kokkos::DefaultHostExecutionSpace space;
+    Kokkos::View<int *, Kokkos::HostSpace> offset("offset", 0);
+    Kokkos::View<Triangle *, Kokkos::HostSpace> intersected_triangles(
+        "intersected_triangles", 0);
+    Kokkos::View<ArborX::Box<3, double>[1], Kokkos::HostSpace> bounding_box(
+        "bounding_box");
+    auto const boundary_points = cell->bounding_box().get_boundary_points();
+    auto const &point_a = boundary_points.first;
+    auto const &point_b = boundary_points.second;
+    bounding_box[0] =
+        ArborX::Box<3, double>(Point({{point_a[0], point_a[1], point_a[2]}}),
+                               Point({{point_b[0], point_b[1], point_b[2]}}));
+
+    _bvh->query(space, ArborX::Experimental::make_intersects(bounding_box),
+                intersected_triangles, offset);
+    if (intersected_triangles.extent(0) > 0)
+    {
+      return false;
+    }
+
+    // Now that the cells that intersect the STL have been filtered out, we
+    // check the cells that the cells are within the STL. A cell is within the
+    // STL, if the dot product between the normal of the closest triangle and
+    // the vector from the cell center to the closest triangle is positive.
+    Kokkos::View<Point[1], Kokkos::HostSpace> cell_center("cell_center");
+    cell_center(0) = {
+        {cell->center()[0], cell->center()[1], cell->center()[2]}};
+    Kokkos::View<bool[1], Kokkos::HostSpace> inside("inside");
+    _bvh->query(space, ArborX::Experimental::make_nearest(cell_center, 1),
+                InsideCallBack{}, inside, offset);
+
+    return inside(0);
+  }
+}
+#endif
 
 template <int dim>
 void Geometry<dim>::assign_material_state(
@@ -244,11 +337,9 @@ void Geometry<dim>::read_stl(std::string const &filename,
     std::memcpy(&n_triangles, n_tri, sizeof n_triangles);
   }
 
-  _stl_triangles =
-      Kokkos::View<ArborX::ExperimentalHyperGeometry::Triangle<3, double> *,
-                   Kokkos::HostSpace>(
-          Kokkos::view_alloc(Kokkos::WithoutInitializing, "stl_triangles"),
-          n_triangles);
+  _stl_triangles = Kokkos::View<Triangle *, Kokkos::HostSpace>(
+      Kokkos::view_alloc(Kokkos::WithoutInitializing, "stl_triangles"),
+      n_triangles);
 
   for (unsigned int i = 0; i < n_triangles; ++i)
   {

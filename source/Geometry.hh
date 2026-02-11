@@ -6,10 +6,19 @@
 #define GEOMETRY_HH
 
 #include <deal.II/distributed/tria.h>
+#include <deal.II/dofs/dof_handler.h>
 
 #include <boost/property_tree/ptree.hpp>
 
+#include <ArborX.hpp>
+#include <ArborX_Config.hpp>
+#if ARBORX_VERSION_MAJOR >= 2
+#include <ArborX_Triangle.hpp>
+#else
 #include <ArborX_HyperTriangle.hpp>
+#endif
+
+#include <memory>
 
 namespace adamantine
 {
@@ -19,6 +28,14 @@ namespace adamantine
 template <int dim>
 class Geometry
 {
+#if ARBORX_VERSION_MAJOR >= 2
+  using Point = ArborX::Point<3, double>;
+  using Triangle = ArborX::Triangle<3, double>;
+#else
+  using Point = ArborX::ExperimentalHyperGeometry::Point<3, double>;
+  using Triangle = ArborX::ExperimentalHyperGeometry::Triangle<3, double>;
+#endif
+
 public:
   /**
    * Constructor.
@@ -36,9 +53,19 @@ public:
   /**
    * Return the triangles from the STL file.
    */
-  Kokkos::View<ArborX::ExperimentalHyperGeometry::Triangle<3, double> *,
-               Kokkos::HostSpace>
-  get_stl_triangles();
+  Kokkos::View<Triangle *, Kokkos::HostSpace> get_stl_triangles();
+
+#if ARBORX_VERSION_MAJOR >= 2
+  /**
+   * Return true if a cell is fully included inside the domain defined by the
+   * STL. Return false if the cell is outside the domain or if it intersects it.
+   *
+   * @note This function assumes that the STL triangle normals are all pointing
+   * outwards from the enclosed volume.
+   */
+  bool is_within_stl(
+      typename dealii::DoFHandler<dim>::active_cell_iterator const &cell) const;
+#endif
 
 private:
   /**
@@ -59,9 +86,14 @@ private:
   /**
    * View of the triangles from the STL file.
    */
-  Kokkos::View<ArborX::ExperimentalHyperGeometry::Triangle<3, double> *,
-               Kokkos::HostSpace>
-      _stl_triangles;
+  Kokkos::View<Triangle *, Kokkos::HostSpace> _stl_triangles;
+
+#if ARBORX_VERSION_MAJOR >= 2
+  /**
+   * BVH tree with STL triangles as leaf nodes.
+   */
+  std::unique_ptr<ArborX::BVH<Kokkos::HostSpace, Triangle>> _bvh;
+#endif
 };
 
 template <int dim>
@@ -72,8 +104,7 @@ Geometry<dim>::get_triangulation()
 }
 
 template <int dim>
-inline Kokkos::View<ArborX::ExperimentalHyperGeometry::Triangle<3, double> *,
-                    Kokkos::HostSpace>
+inline Kokkos::View<typename Geometry<dim>::Triangle *, Kokkos::HostSpace>
 Geometry<dim>::get_stl_triangles()
 {
   return _stl_triangles;
