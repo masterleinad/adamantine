@@ -621,7 +621,7 @@ compute_cells_to_refine(
   Kokkos::View<bool*, Kokkos::HostSpace> cell_intersects ("cell_intersects", n);
 
   tree.query(
-      Kokkos::DefaultHostExecutionSpace{}, queries, IntersectionCallback{});
+      Kokkos::DefaultHostExecutionSpace{}, queries, IntersectionCallback{cell_intersects});
 
   // Put the indices into a set to get rid of the duplicates and to make it
   // easier to check if the indices are found.
