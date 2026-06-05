@@ -861,8 +861,11 @@ double ThermalPhysics<dim, n_materials, p_order, fe_degree, MaterialStates,
         dealii::LA::distributed::Vector<double, MemorySpaceType> &solution,
         std::vector<Timer> &timers)
 {
+#ifdef ADAMANTINE_WITH_CALIPER
+  CALI_CXX_MARK_FUNCTION;
+#endif
   // For very small time steps (e.g., less than 1e-4 second), using deal.II to
-  // perform a forward steps becomes costly. In that case, we just peform the
+  // perform a forward steps becomes costly. In that case, we just perform the
   // forward euler ourselves.
   if (_forward_euler)
   {
