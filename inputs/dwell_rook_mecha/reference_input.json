@@ -57,14 +57,14 @@
         "thermal_conductivity_x": "20.6",
         "thermal_conductivity_y": "20.6",
         "thermal_conductivity_z": "20.6",
-        "emissivity": 1.0,
-        "convection_heat_transfer_coef": 25.3758,
+        "emissivity": 0.41216,
+        "convection_heat_transfer_coef": 70.666
         "lame_first_parameter": "92.4e9",
         "lame_second_parameter": "74.e9",
         "thermal_expansion_coef": "1.12e-5",
         "plastic_modulus": "19.7e9",
         "isotropic_hardening": 0.5,
-        "elastic_limit": "1170e9"
+        "elastic_limit": "1170e6"
       },
       "liquid":
       {
@@ -73,8 +73,8 @@
         "thermal_conductivity_x": "20.6",
         "thermal_conductivity_y": "20.6",
         "thermal_conductivity_z": "20.6",
-        "emissivity": 0.35,
-        "convection_heat_transfer_coef": 25.3758
+        "emissivity": 0.41216,
+        "convection_heat_transfer_coef": 70.666
       },
       "solidus": 1729,
       "liquidus": 1764,
@@ -94,7 +94,7 @@
       "diameter": 3.5e-3,
       "scan_path_file": "scan_path.inp",
       "scan_path_file_format": "event_series",
-      "absorption_efficiency": 0.8,
+      "absorption_efficiency": 0.6534,
       "max_power": 1.0
     }
   },
@@ -103,14 +103,14 @@
   {
     "method": "forward_euler",
     "scan_path_for_duration": true,
-    "time_step": 6.5e-4,
+    "time_step": 1e-3
     "mechanical_time_step_factor": 10
   },
 
   "post_processor":
   {
     "filename_prefix": "solution",
-    "time_steps_between_output": 7692,
+    "time_steps_between_output": 5000,
     "additional_output_refinement": 0
   },
 

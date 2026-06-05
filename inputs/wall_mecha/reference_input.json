@@ -13,11 +13,11 @@
     "reset_material_id": true,
     "material_deposition": true,
     "material_deposition_method": "scan_paths",
-    "deposition_length": 3.5e-3,
-    "deposition_height": 7.1e-4,
-    "deposition_width": 3.5e-3,
+    "deposition_length": 4e-3,
+    "deposition_height": 2.31e-3,
+    "deposition_width": 13e-3,
     "deposition_time": 50,
-    "deposition_lead_time": 0,
+    "deposition_lead_time": 1,
     "material_height": 0.0
   },
 
@@ -29,7 +29,11 @@
 
   "boundary":
   {
-    "type": "convective"
+    "type": "convective,traction_free",
+    "boundary_0":
+    {
+      "type": "convective,clamped"
+    }
   },
 
   "refinement":
@@ -48,27 +52,31 @@
       "new_material_temperature": 300,
       "solid":
       {
-        "specific_heat": 779.0,
-        "density": "7806.0",
-        "thermal_conductivity_x": "20.6",
-        "thermal_conductivity_y": "20.6",
-        "thermal_conductivity_z": "20.6",          
-        "emissivity": 0.41216,
-        "convection_heat_transfer_coef": 70.666
+        "specific_heat": 460.0,
+        "density": "7990",
+        "thermal_conductivity_x": "45",
+        "thermal_conductivity_y": "45",
+        "thermal_conductivity_z": "45",
+        "convection_heat_transfer_coef": 24.1,
+        "lame_first_parameter": "115e9",
+        "lame_second_parameter": "80e9",
+        "thermal_expansion_coef": "1.25e-5",
+        "plastic_modulus": "20e9",
+        "isotropic_hardening": 1.0,
+        "elastic_limit": "335e6"
       },
       "liquid":
       {
         "specific_heat": 779.0,
-        "density": "7806.0",
-        "thermal_conductivity_x": "20.6",
-        "thermal_conductivity_y": "20.6",
-        "thermal_conductivity_z": "20.6",
-        "emissivity": 0.41216,
-        "convection_heat_transfer_coef": 70.666
+        "density": "7990",
+        "thermal_conductivity_x": "45",
+        "thermal_conductivity_y": "45",
+        "thermal_conductivity_z": "45",
+        "convection_heat_transfer_coef": 24.1
       },
-      "solidus": 1729,
-      "liquidus": 1764,
-      "latent_heat": 229900,
+      "solidus": 1440,
+      "liquidus": 1530,
+      "latent_heat": 250000,
       "radiation_temperature_infty": 300,
       "convection_temperature_infty": 300
     }
@@ -84,7 +92,7 @@
       "diameter": 3.5e-3,
       "scan_path_file": "scan_path.inp",
       "scan_path_file_format": "event_series",
-      "absorption_efficiency": 0.6534,
+      "absorption_efficiency": 0.1763,
       "max_power": 1.0
     }
   },
@@ -99,7 +107,7 @@
   "post_processor":
   {
     "filename_prefix": "solution",
-    "time_steps_between_output": 5000,
+    "time_steps_between_output": 10000,
     "additional_output_refinement": 0
   },
 
