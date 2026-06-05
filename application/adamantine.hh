@@ -998,9 +998,9 @@ run(MPI_Comm const &communicator, boost::property_tree::ptree const &database,
   bool const scan_path_for_duration =
       time_stepping_database.get("scan_path_for_duration", false);
   // PropertyTreeInput time_stepping.duration
-  double const duration = scan_path_for_duration
-                              ? std::numeric_limits<double>::max()
-                              : time_stepping_database.get<double>("duration");
+  double duration = scan_path_for_duration
+                        ? std::numeric_limits<double>::max()
+                        : time_stepping_database.get<double>("duration");
 
   // Extract the refinement database
   boost::property_tree::ptree refinement_database =
@@ -1033,6 +1033,19 @@ run(MPI_Comm const &communicator, boost::property_tree::ptree const &database,
   }
 
   bool rebuild_mechanical_matrix = true;
+  double current_scan_path_end = 0.;
+  double tmpaa = 1e6;
+  bool scan_path_end = true;
+  for (auto &source : heat_sources)
+  {
+    if (source->get_scan_path().get_segment_list().back().end_time < tmpaa)
+      tmpaa = source->get_scan_path().get_segment_list().back().end_time;
+    if (!source->get_scan_path().is_finished())
+      scan_path_end = false;
+  }
+  current_scan_path_end = tmpaa;
+  if (scan_path_end)
+    duration = current_scan_path_end;
 
 #ifdef ADAMANTINE_WITH_CALIPER
   CALI_CXX_MARK_LOOP_BEGIN(main_loop_id, "main_loop");
@@ -1044,6 +1057,42 @@ run(MPI_Comm const &communicator, boost::property_tree::ptree const &database,
 #endif
     if ((time + time_step) > duration)
       time_step = duration - time;
+
+    // If we use scan_path_for_duration, we may need to read the scan path
+    // file once again.
+    if (scan_path_for_duration && time > current_scan_path_end)
+    {
+#ifdef ADAMANTINE_WITH_CALIPER
+      CALI_MARK_BEGIN("update scan path");
+#endif
+      // Check if we have reached the end of the file. If not, read the
+      // updated scan path file
+      double tmp = 1e6;
+      scan_path_end = true;
+      for (auto &source : heat_sources)
+      {
+        if (!source->get_scan_path().is_finished())
+        {
+          // This functions waits for the scan path file to be updated
+          // before reading the file.
+          scan_path_end = false;
+          source->get_scan_path().read_file();
+          if (source->get_scan_path().get_segment_list().back().end_time < tmp)
+            tmp = source->get_scan_path().get_segment_list().back().end_time;
+        }
+      }
+      current_scan_path_end = tmp;
+      if (scan_path_end)
+        duration = current_scan_path_end;
+
+      std::tie(material_deposition_boxes, deposition_times, deposition_cos,
+               deposition_sin) =
+          adamantine::create_material_deposition_boxes<dim>(geometry_database,
+                                                            heat_sources);
+#ifdef ADAMANTINE_WITH_CALIPER
+      CALI_MARK_END("update scan path");
+#endif
+    }
 
     // Refine the mesh the first time we get in the loop and after
     // time_steps_refinement time steps.
@@ -1070,57 +1119,15 @@ run(MPI_Comm const &communicator, boost::property_tree::ptree const &database,
     // time and the time match should match exactly but don't because of
     // floating point accuracy.
     timers[adamantine::add_material_activate].start();
+#ifdef ADAMANTINE_WITH_CALIPER
+    CALI_MARK_BEGIN("activation");
+#endif
     double const time_step_tol = time_step * 1e-6;
     // The condition is written in such a way that it avoids the subtraction of
     // a large number (activation_time_end) with a much smaller one
     // (time_step_tol).
     if (time - activation_time_end > -time_step_tol)
     {
-      // If we use scan_path_for_duration, we may need to read the scan path
-      // file once again.
-      if (scan_path_for_duration)
-      {
-        // Check if we have reached the end of current scan path.
-        bool need_updated_scan_path = false;
-        for (auto &source : heat_sources)
-        {
-          if (time > source->get_scan_path().get_segment_list().back().end_time)
-          {
-            need_updated_scan_path = true;
-            break;
-          }
-        }
-
-        if (need_updated_scan_path)
-        {
-          // Check if we have reached the end of the file. If not, read the
-          // updated scan path file
-          bool scan_path_end = true;
-          for (auto &source : heat_sources)
-          {
-            if (!source->get_scan_path().is_finished())
-            {
-              scan_path_end = false;
-              // This functions waits for the scan path file to be updated
-              // before reading the file.
-              source->get_scan_path().read_file();
-            }
-          }
-
-          // If we have reached the end of scan path file for all the heat
-          // sources, we just exit.
-          if (scan_path_end)
-          {
-            break;
-          }
-
-          std::tie(material_deposition_boxes, deposition_times, deposition_cos,
-                   deposition_sin) =
-              adamantine::create_material_deposition_boxes<dim>(
-                  geometry_database, heat_sources);
-        }
-      }
-
       auto activation_start =
           std::lower_bound(deposition_times.begin(), deposition_times.end(),
                            time - time_step_tol) -
@@ -1197,6 +1204,9 @@ run(MPI_Comm const &communicator, boost::property_tree::ptree const &database,
                   << thermal_physics->get_dof_handler().n_dofs() << std::endl;
       }
     }
+#ifdef ADAMANTINE_WITH_CALIPER
+    CALI_MARK_END("activation");
+#endif
     timers[adamantine::add_material_activate].stop();
 
     // If thermomechanics are being solved, mark cells that are above the
@@ -1356,6 +1366,9 @@ run(MPI_Comm const &communicator, boost::property_tree::ptree const &database,
     }
 
     // Output progress on screen
+#ifdef ADAMANTINE_WITH_CALIPER
+    CALI_MARK_BEGIN("output");
+#endif
     if (rank == 0)
     {
       double adim_time = time / (duration / 10.);
@@ -1379,6 +1392,9 @@ run(MPI_Comm const &communicator, boost::property_tree::ptree const &database,
                   temperature, mechanical_physics, displacement,
                   material_properties, timers);
     }
+#ifdef ADAMANTINE_WITH_CALIPER
+    CALI_MARK_END("output");
+#endif
     ++n_time_step;
   }
 
