@@ -14,11 +14,11 @@ color_ideal = colors[4]
 n_procs = [1, 2, 4, 8, 12]
 
 
-total_time = [21129.72, 11884.47, 7257.78, 5323.14, 5488.35]
-solve_time = [13845.677, 7447.26, 4353.48, 2921.77, 2764.48]
-rhs_time = [1610.34, 877.18, 517.04, 342.94, 303.15]
-matrix_time = [715.16, 385.79, 213.77, 132.76, 113.51]
-average_throughput = [87.37, 155.34, 254.37, 346.82, 336.38]
+total_time = [20681.9, 10468.9, 5262.7, 4326.9, 4689.3]
+solve_time = [13742, 6483.8, 3084.8, 2309.3, 2264.9]
+rhs_time = [1573.6, 819.8, 435.5, 323.4, 350.5]
+matrix_time = [352.3, 240.8, 120.2, 87.4, 79.8]
+average_throughput = [57.9, 114.3, 227.5, 276.7, 255.3]
 
 def compute_ideal_time(time):
     return [time[0]/n_procs[0], time[0]/n_procs[1], time[0]/n_procs[2],
@@ -99,6 +99,11 @@ speedup_matrix_plt, = plt.plot(n_procs, speedup_matrix, '-', color =
         label='Matrix')
 ideal_speedup_plt, = plt.plot(n_procs, n_procs , '-', color = color_ideal, linewidth = 3, markersize = 12,
         label='Ideal Scaling')
+
+plt.xlim(1, 12)
+plt.ylim(1, 8)
+plt.xticks(np.arange(1, 13, 1))
+plt.yticks(np.arange(1, 9, 1))
 ax.legend(handles=[speedup_total_plt, speedup_solve_plt, speedup_rhs_plt,
     speedup_matrix_plt, ideal_speedup_plt], fontsize = 18)
 plt.xlabel('Number of cores', fontsize = 20)
