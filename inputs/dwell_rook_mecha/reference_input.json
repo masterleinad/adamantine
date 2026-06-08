@@ -58,7 +58,7 @@
         "thermal_conductivity_y": "20.6",
         "thermal_conductivity_z": "20.6",
         "emissivity": 0.41216,
-        "convection_heat_transfer_coef": 70.666
+        "convection_heat_transfer_coef": 70.666,
         "lame_first_parameter": "92.4e9",
         "lame_second_parameter": "74.e9",
         "thermal_expansion_coef": "1.12e-5",
@@ -103,7 +103,7 @@
   {
     "method": "forward_euler",
     "scan_path_for_duration": true,
-    "time_step": 1e-3
+    "time_step": 1e-3,
     "mechanical_time_step_factor": 10
   },
 
