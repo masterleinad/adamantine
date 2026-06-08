@@ -88,7 +88,7 @@ eval_percent_fine = [87.8, 79.7, 79.2, 68.7, 64.2]
 
 # P3-Refinement
 #--------------
-time_p3 = [29076.8, 19321.7, 12362.0, 6293.8, 5507.1]
+time_p3 = [29076.8, 15634.3, 8973.7, 6293.8, 5507.1]
 time_p3_0 = time_p3[0]
 ideal_strong_time_p3 = [time_p3_0, time_p3_0/2, time_p3_0/4,
         time_p3_0/8, time_p3_0/12]
@@ -98,9 +98,9 @@ efficiency_p3 = [time_p3_0/time_p3_0, time_p3_0/(time_p3[1]*2),
         time_p3_0/(time_p3[2]*4), time_p3_0/(time_p3[3]*8),
         time_p3_0/(time_p3[4]*12)]
 
-average_throughput_p3 = [381.7, 574.4, 897.8, 1763.5, 2015.4]
-first_block_throughput_p3 = [1257.6, 2065.9, 2573.2, 2970.6, 2886.9]
-last_block_throughput_p3 = [203.3, 439.4, 519.7, 1251.8, 1528.3]
+average_throughput_p3 = [381.7, 709.9, 1236.9, 1763.5, 2015.4]
+first_block_throughput_p3 = [1257.6, 1847.4, 2822.3, 2970.6, 2886.9]
+last_block_throughput_p3 = [203.3, 435.2, 769.8, 1251.8, 1528.3]
 average_throughput_p3_0 = average_throughput_p3[0]
 average_throughput_speedup_p3 = [x/average_throughput_p3_0 for x in average_throughput_p3]
 first_throughput_p3_0 = first_block_throughput_p3[0]
@@ -108,7 +108,7 @@ first_block_throughput_speedup_p3 = [x/first_throughput_p3_0 for x in first_bloc
 last_throughput_p3_0 = last_block_throughput_p3[0]
 last_block_throughput_speedup_p3 = [x/last_throughput_p3_0 for x in last_block_throughput_p3]
 
-eval_percent_fine = [94.0, 91.9, 88.0, 76.5, 71.6]
+eval_percent_fine = [94.0, 91.9, 86.8, 76.5, 71.6]
 
 ######################
 # PLOT PARAMETERS
