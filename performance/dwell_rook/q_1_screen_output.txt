@@ -1,0 +1,192 @@
+Starting non-ensemble simulation
+n_time_step: 1 time: 0 n_dofs (thermal) after mesh refinement: 20230
+n_time_step: 1 time: 0 n_dofs (thermal) after cell activation: 22030
+n_time_step: 100001 time: 100 n_dofs (thermal) after cell activation: 23110
+n_time_step: 150001 time: 150 n_dofs (thermal) after cell activation: 23830
+n_time_step: 250001 time: 250 n_dofs (thermal) after cell activation: 25630
+n_time_step: 300002 time: 300.001 n_dofs (thermal) after cell activation: 25630
+n_time_step: 400004 time: 400.003 n_dofs (thermal) after cell activation: 27430
+n_time_step: 450005 time: 450.004 n_dofs (thermal) after cell activation: 27430
+n_time_step: 550007 time: 550.006 n_dofs (thermal) after cell activation: 29230
+n_time_step: 600008 time: 600.007 n_dofs (thermal) after cell activation: 29230
+n_time_step: 700010 time: 700.009 n_dofs (thermal) after cell activation: 31030
+n_time_step: 750011 time: 750.01 n_dofs (thermal) after cell activation: 31030
+n_time_step: 850013 time: 850.012 n_dofs (thermal) after cell activation: 32830
+n_time_step: 900014 time: 900.013 n_dofs (thermal) after cell activation: 32830
+n_time_step: 1000016 time: 1000.01 n_dofs (thermal) after cell activation: 34630
+10% completed
+n_time_step: 1150019 time: 1150.02 n_dofs (thermal) after cell activation: 36430
+n_time_step: 1300022 time: 1300.02 n_dofs (thermal) after cell activation: 38230
+n_time_step: 1400024 time: 1400.02 n_dofs (thermal) after cell activation: 38755
+n_time_step: 1450025 time: 1450.02 n_dofs (thermal) after cell activation: 40030
+n_time_step: 1550027 time: 1550.03 n_dofs (thermal) after cell activation: 41227
+n_time_step: 1600028 time: 1600.03 n_dofs (thermal) after cell activation: 41830
+n_time_step: 1700030 time: 1700.03 n_dofs (thermal) after cell activation: 43630
+n_time_step: 1750031 time: 1750.03 n_dofs (thermal) after cell activation: 43630
+n_time_step: 1850033 time: 1850.03 n_dofs (thermal) after cell activation: 45430
+n_time_step: 1900034 time: 1900.03 n_dofs (thermal) after cell activation: 45430
+n_time_step: 2000036 time: 2000.03 n_dofs (thermal) after cell activation: 47230
+n_time_step: 2050036 time: 2050.03 n_dofs (thermal) after cell activation: 47230
+n_time_step: 2150036 time: 2150.03 n_dofs (thermal) after cell activation: 49030
+n_time_step: 2200036 time: 2200.03 n_dofs (thermal) after cell activation: 49030
+20% completed
+n_time_step: 2300036 time: 2300.04 n_dofs (thermal) after cell activation: 50830
+n_time_step: 2350036 time: 2350.04 n_dofs (thermal) after cell activation: 50830
+n_time_step: 2450036 time: 2450.04 n_dofs (thermal) after cell activation: 52630
+n_time_step: 2500036 time: 2500.04 n_dofs (thermal) after cell activation: 52630
+n_time_step: 2600036 time: 2600.04 n_dofs (thermal) after cell activation: 52630
+n_time_step: 2750036 time: 2750.04 n_dofs (thermal) after cell activation: 54430
+n_time_step: 2900036 time: 2900.04 n_dofs (thermal) after cell activation: 56230
+n_time_step: 3000036 time: 3000.04 n_dofs (thermal) after cell activation: 56935
+n_time_step: 3050036 time: 3050.04 n_dofs (thermal) after cell activation: 58030
+n_time_step: 3150036 time: 3150.04 n_dofs (thermal) after cell activation: 59497
+n_time_step: 3200036 time: 3200.04 n_dofs (thermal) after cell activation: 59830
+n_time_step: 3300036 time: 3300.04 n_dofs (thermal) after cell activation: 61630
+30% completed
+n_time_step: 3400036 time: 3400.04 n_dofs (thermal) after cell activation: 63430
+n_time_step: 3450036 time: 3450.04 n_dofs (thermal) after cell activation: 63430
+n_time_step: 3500036 time: 3500.04 n_dofs (thermal) after cell activation: 63838
+n_time_step: 3550036 time: 3550.04 n_dofs (thermal) after cell activation: 65230
+n_time_step: 3650036 time: 3650.04 n_dofs (thermal) after cell activation: 67030
+n_time_step: 3750036 time: 3750.04 n_dofs (thermal) after cell activation: 68830
+n_time_step: 3800036 time: 3800.04 n_dofs (thermal) after cell activation: 68830
+n_time_step: 3900036 time: 3900.04 n_dofs (thermal) after cell activation: 70630
+n_time_step: 4000036 time: 4000.04 n_dofs (thermal) after cell activation: 72430
+n_time_step: 4050036 time: 4050.04 n_dofs (thermal) after cell activation: 72430
+n_time_step: 4100036 time: 4100.04 n_dofs (thermal) after cell activation: 73726
+n_time_step: 4150036 time: 4150.04 n_dofs (thermal) after cell activation: 74230
+n_time_step: 4250036 time: 4250.04 n_dofs (thermal) after cell activation: 76030
+n_time_step: 4350036 time: 4350.04 n_dofs (thermal) after cell activation: 77830
+n_time_step: 4400036 time: 4400.04 n_dofs (thermal) after cell activation: 77830
+40% completed
+n_time_step: 4500036 time: 4500.04 n_dofs (thermal) after cell activation: 79630
+n_time_step: 4600036 time: 4600.04 n_dofs (thermal) after cell activation: 81430
+n_time_step: 4700036 time: 4700.04 n_dofs (thermal) after cell activation: 83230
+n_time_step: 4750036 time: 4750.04 n_dofs (thermal) after cell activation: 83230
+n_time_step: 4800036 time: 4800.04 n_dofs (thermal) after cell activation: 85030
+n_time_step: 4900036 time: 4900.04 n_dofs (thermal) after cell activation: 85030
+n_time_step: 5000036 time: 5000.04 n_dofs (thermal) after cell activation: 86830
+n_time_step: 5100036 time: 5100.04 n_dofs (thermal) after cell activation: 88630
+n_time_step: 5200036 time: 5200.04 n_dofs (thermal) after cell activation: 90430
+n_time_step: 5250036 time: 5250.04 n_dofs (thermal) after cell activation: 91216
+n_time_step: 5300036 time: 5300.04 n_dofs (thermal) after cell activation: 92230
+n_time_step: 5350036 time: 5350.04 n_dofs (thermal) after cell activation: 94030
+n_time_step: 5400036 time: 5400.04 n_dofs (thermal) after cell activation: 94030
+n_time_step: 5450036 time: 5450.04 n_dofs (thermal) after cell activation: 95830
+50% completed
+n_time_step: 5550036 time: 5550.04 n_dofs (thermal) after cell activation: 97630
+n_time_step: 5650036 time: 5650.04 n_dofs (thermal) after cell activation: 99430
+n_time_step: 5750036 time: 5750.04 n_dofs (thermal) after cell activation: 101230
+n_time_step: 5850036 time: 5850.04 n_dofs (thermal) after cell activation: 103030
+n_time_step: 5950036 time: 5950.04 n_dofs (thermal) after cell activation: 104830
+n_time_step: 6000036 time: 6000.04 n_dofs (thermal) after cell activation: 106450
+n_time_step: 6050036 time: 6050.04 n_dofs (thermal) after cell activation: 106630
+n_time_step: 6150036 time: 6150.04 n_dofs (thermal) after cell activation: 108430
+n_time_step: 6250036 time: 6250.04 n_dofs (thermal) after cell activation: 110230
+n_time_step: 6300036 time: 6300.04 n_dofs (thermal) after cell activation: 110230
+n_time_step: 6400036 time: 6400.04 n_dofs (thermal) after cell activation: 112030
+n_time_step: 6500036 time: 6500.04 n_dofs (thermal) after cell activation: 113830
+n_time_step: 6600036 time: 6600.04 n_dofs (thermal) after cell activation: 115612
+n_time_step: 6650036 time: 6650.04 n_dofs (thermal) after cell activation: 115630
+60% completed
+n_time_step: 6750036 time: 6750.04 n_dofs (thermal) after cell activation: 117430
+n_time_step: 6850036 time: 6850.04 n_dofs (thermal) after cell activation: 117430
+n_time_step: 6900036 time: 6900.04 n_dofs (thermal) after cell activation: 117430
+n_time_step: 6950036 time: 6950.04 n_dofs (thermal) after cell activation: 117865
+n_time_step: 7000036 time: 7000.04 n_dofs (thermal) after cell activation: 119230
+n_time_step: 7100036 time: 7100.04 n_dofs (thermal) after cell activation: 121030
+n_time_step: 7200036 time: 7200.04 n_dofs (thermal) after cell activation: 122830
+n_time_step: 7250036 time: 7250.04 n_dofs (thermal) after cell activation: 122830
+n_time_step: 7350036 time: 7350.04 n_dofs (thermal) after cell activation: 124630
+n_time_step: 7450036 time: 7450.04 n_dofs (thermal) after cell activation: 126430
+n_time_step: 7500036 time: 7500.04 n_dofs (thermal) after cell activation: 126430
+n_time_step: 7550036 time: 7550.04 n_dofs (thermal) after cell activation: 127279
+n_time_step: 7600036 time: 7600.04 n_dofs (thermal) after cell activation: 128230
+n_time_step: 7700036 time: 7700.04 n_dofs (thermal) after cell activation: 130030
+n_time_step: 7750036 time: 7750.04 n_dofs (thermal) after cell activation: 130030
+70% completed
+n_time_step: 7850036 time: 7850.04 n_dofs (thermal) after cell activation: 131830
+n_time_step: 8000036 time: 8000.04 n_dofs (thermal) after cell activation: 133630
+n_time_step: 8150036 time: 8150.04 n_dofs (thermal) after cell activation: 135430
+n_time_step: 8250036 time: 8250.04 n_dofs (thermal) after cell activation: 136045
+n_time_step: 8300036 time: 8300.04 n_dofs (thermal) after cell activation: 137230
+n_time_step: 8400036 time: 8400.04 n_dofs (thermal) after cell activation: 138337
+n_time_step: 8450036 time: 8450.04 n_dofs (thermal) after cell activation: 139030
+n_time_step: 8550036 time: 8550.04 n_dofs (thermal) after cell activation: 140830
+n_time_step: 8600036 time: 8600.04 n_dofs (thermal) after cell activation: 140830
+n_time_step: 8700036 time: 8700.04 n_dofs (thermal) after cell activation: 142630
+n_time_step: 8750036 time: 8750.04 n_dofs (thermal) after cell activation: 142630
+n_time_step: 8850036 time: 8850.04 n_dofs (thermal) after cell activation: 144430
+80% completed
+n_time_step: 8900036 time: 8900.04 n_dofs (thermal) after cell activation: 144430
+n_time_step: 9000036 time: 9000.04 n_dofs (thermal) after cell activation: 146230
+n_time_step: 9050036 time: 9050.04 n_dofs (thermal) after cell activation: 146230
+n_time_step: 9150036 time: 9150.04 n_dofs (thermal) after cell activation: 148030
+n_time_step: 9200036 time: 9200.04 n_dofs (thermal) after cell activation: 148030
+n_time_step: 9300036 time: 9300.04 n_dofs (thermal) after cell activation: 149830
+n_time_step: 9350036 time: 9350.04 n_dofs (thermal) after cell activation: 149830
+n_time_step: 9450036 time: 9450.04 n_dofs (thermal) after cell activation: 149830
+n_time_step: 9500036 time: 9500.04 n_dofs (thermal) after cell activation: 149830
+n_time_step: 9600036 time: 9600.04 n_dofs (thermal) after cell activation: 151630
+n_time_step: 9750036 time: 9750.04 n_dofs (thermal) after cell activation: 153430
+n_time_step: 9900036 time: 9900.04 n_dofs (thermal) after cell activation: 155230
+90% completed
+n_time_step: 10000000 time: 10000 n_dofs (thermal) after mesh refinement: 155230
+n_time_step: 10000036 time: 10000 n_dofs (thermal) after cell activation: 155656
+n_time_step: 10050036 time: 10050 n_dofs (thermal) after cell activation: 157030
+n_time_step: 10150036 time: 10150 n_dofs (thermal) after cell activation: 157852
+n_time_step: 10200036 time: 10200 n_dofs (thermal) after cell activation: 158830
+n_time_step: 10300036 time: 10300 n_dofs (thermal) after cell activation: 159910
+n_time_step: 10350036 time: 10350 n_dofs (thermal) after cell activation: 160630
+n_time_step: 10450036 time: 10450 n_dofs (thermal) after cell activation: 162358
+n_time_step: 10500036 time: 10500 n_dofs (thermal) after cell activation: 162430
+n_time_step: 10600036 time: 10600 n_dofs (thermal) after cell activation: 164230
+n_time_step: 10650036 time: 10650 n_dofs (thermal) after cell activation: 164230
+n_time_step: 10750036 time: 10750 n_dofs (thermal) after cell activation: 164230
+n_time_step: 10800036 time: 10800 n_dofs (thermal) after cell activation: 164230
+100% completed
+Simulation done
+
+Loop summary:
+------------
+
+Loop      Iterations Time (s)     Iter/s (min) Iter/s (max) Iter/s (avg) 
+main_loop   11099101 29076.803011    97.185249  1397.649707   381.716690 
+
+Iteration summary (main_loop):
+-----------------
+
+Block    Iterations Time (s)    Iter/s      
+       0     555261  441.513291 1257.631450 
+  554955     554882  523.337381 1060.275876 
+ 1109910     554857  605.695715  916.065586 
+ 1664865     554860  692.090144  801.716373 
+ 2219820     555166  763.764013  726.881590 
+ 2774775     554875  834.699726  664.760012 
+ 3329730     554975  933.774317  594.335259 
+ 3884685     554798 1043.610521  531.614035 
+ 4439640     554942 1149.226645  482.882991 
+ 4994595     554952 1271.699623  436.386070 
+ 5549550     555093 1436.394754  386.448780 
+ 6104505     554940 1557.330486  356.340549 
+ 6659460     554925 1655.085522  335.284789 
+ 7214415     554918 1769.846088  313.540259 
+ 7769370     554915 1892.113439  293.277870 
+ 8324325     554968 2085.351821  266.126797 
+ 8879280     554999 2383.712150  232.829706 
+ 9434235     554906 2526.166257  219.663294 
+ 9989190     554949 2782.338856  199.454139 
+10544145     554920 2729.052264  203.337989 
+Path                             Min time/rank Max time/rank Avg time/rank Time %     Calls (min)     Calls (max)     Calls (avg)     Calls (total)   
+main                              29077.163256  29077.163256  29077.163256 100.000000        1.000000        1.000000        1.000000        1.000000 
+  run                             29077.162912  29077.162912  29077.162912  99.999999        1.000000        1.000000        1.000000        1.000000 
+    output_pvtu                       0.008368      0.008368      0.008368   0.000029        1.000000        1.000000        1.000000        1.000000 
+    main_loop                     29076.802992  29076.802992  29076.802992  99.998761 11099102.000000 11099102.000000 11099102.000000 11099102.000000 
+      refine_mesh                     0.030691      0.030691      0.030691   0.000106        2.000000        2.000000        2.000000        2.000000 
+      activation                     31.657069     31.657069     31.657069   0.108873 11099101.000000 11099101.000000 11099101.000000 11099101.000000 
+        add material                 27.298623     27.298623     27.298623   0.093883      134.000000      134.000000      134.000000      134.000000 
+          refine triangulation       11.094443     11.094443     11.094443   0.038155      134.000000      134.000000      134.000000      134.000000 
+      evolve_one_time_step        28943.249337  28943.249337  28943.249337  99.539453 11099101.000000 11099101.000000 11099101.000000 11099101.000000 
+        evaluate_thermal_physics  27345.601013  27345.601013  27345.601013  94.044941 11099101.000000 11099101.000000 11099101.000000 11099101.000000 
+      output                         38.077126     38.077126     38.077126   0.130952 11099101.000000 11099101.000000 11099101.000000 11099101.000000 
+        output_pvtu                  26.361364     26.361364     26.361364   0.090660     2219.000000     2219.000000     2219.000000     2219.000000 
