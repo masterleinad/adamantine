@@ -13,11 +13,11 @@
     "reset_material_id": true,
     "material_deposition": true,
     "material_deposition_method": "scan_paths",
-    "deposition_length": 4.8e-3,
+    "deposition_length": 6.5e-3,
     "deposition_height": 2.31e-3,
-    "deposition_width": 4.8e-3,
+    "deposition_width": 6.5e-3,
     "deposition_time": 50,
-    "deposition_lead_time": 1,
+    "deposition_lead_time": 50,
     "material_height": 0.00201
   },
 
@@ -110,7 +110,7 @@
   "post_processor":
   {
     "filename_prefix": "solution",
-    "time_steps_between_output": 10,
+    "time_steps_between_output": 10000,
     "additional_output_refinement": 0
   },
 
