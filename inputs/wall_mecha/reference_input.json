@@ -24,7 +24,7 @@
   "physics":
   {
     "thermal": true,
-    "mechanical": false
+    "mechanical": true
   },
 
   "boundary":
@@ -95,7 +95,7 @@
       "diameter": 4.8e-3,
       "scan_path_file": "scan_path.inp",
       "scan_path_file_format": "event_series",
-      "absorption_efficiency": 0.7,
+      "absorption_efficiency": 0.6,
       "max_power": 1.0
     }
   },
