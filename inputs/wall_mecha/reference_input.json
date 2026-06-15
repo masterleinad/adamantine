@@ -13,12 +13,12 @@
     "reset_material_id": true,
     "material_deposition": true,
     "material_deposition_method": "scan_paths",
-    "deposition_length": 6.5e-3,
-    "deposition_height": 2.31e-3,
-    "deposition_width": 6.5e-3,
+    "deposition_length": 9.6e-3,
+    "deposition_height": 2.3e-3,
+    "deposition_width": 9.6e-3,
     "deposition_time": 50,
     "deposition_lead_time": 50,
-    "material_height": 0.00201
+    "material_height": -0.3e-3
   },
 
   "physics":
@@ -87,10 +87,11 @@
   "sources":
   {
     "n_beams": 1,
+    "print_heat_input": false,
     "beam_0":
     {
       "type": "goldak",
-      "depth": 2.31e-3,
+      "depth": 2.3e-3,
       "diameter": 4.8e-3,
       "scan_path_file": "scan_path.inp",
       "scan_path_file_format": "event_series",
