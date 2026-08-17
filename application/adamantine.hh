@@ -1,4 +1,4 @@
-/pplication/adamantine.hh* SPDX-FileCopyrightText: Copyright (c) 2016 - 2026, the adamantine authors.
+/* SPDX-FileCopyrightText: Copyright (c) 2016 - 2026, the adamantine authors.
  * SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
  */
 
