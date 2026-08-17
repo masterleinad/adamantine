@@ -1,4 +1,4 @@
-/* SPDX-FileCopyrightText: Copyright (c) 2016 - 2026, the adamantine authors.
+/pplication/adamantine.hh* SPDX-FileCopyrightText: Copyright (c) 2016 - 2026, the adamantine authors.
  * SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
  */
 
@@ -1047,6 +1047,28 @@ run(MPI_Comm const &communicator, boost::property_tree::ptree const &database,
   if (scan_path_end)
     duration = current_scan_path_end;
 
+  // If the duration is derived from the scan path, we get the time of the last
+  // segment. If the scan path file contains SCAN_PATH_END, we set the final
+  // duration.
+  double current_scan_path_end = 0;
+  if (scan_path_for_duration)
+  {
+    bool scan_path_end = true;
+    double current_end_time = std::numeric_limits<double>::max();
+    for (auto &source : heat_sources)
+    {
+      double scan_path_end_time =
+          source->get_scan_path().get_segment_list().back().end_time;
+      if (current_end_time > scan_path_end_time)
+        current_end_time = scan_path_end_time;
+      if (!source->get_scan_path().is_finished())
+        scan_path_end = false;
+    }
+    current_scan_path_end = current_end_time;
+    if (scan_path_end)
+      duration = current_scan_path_end;
+  }
+
 #ifdef ADAMANTINE_WITH_CALIPER
   CALI_CXX_MARK_LOOP_BEGIN(main_loop_id, "main_loop");
 #endif
@@ -1055,6 +1077,49 @@ run(MPI_Comm const &communicator, boost::property_tree::ptree const &database,
 #ifdef ADAMANTINE_WITH_CALIPER
     CALI_CXX_MARK_LOOP_ITERATION(main_loop_id, n_time_step - 1);
 #endif
+
+    // If we use scan_path_for_duration, we may need to read the scan path
+    // file once again.
+    // We use an epsilon to get the "expected" behavior when the deposition
+    // time and the time match should match exactly but don't because of
+    // floating point accuracy.
+    double const time_step_tol = time_step * 1e-6;
+    // The condition is written in such a way that it avoids the subtraction of
+    // a large number (current_scan_path_end) with a much smaller one
+    // (time_step_tol).
+    if (scan_path_for_duration &&
+        (time - current_scan_path_end > -time_step_tol))
+    {
+      // Check if we have reached the end of the file. If not, read the
+      // updated scan path file
+      bool scan_path_end = true;
+      double current_end_time = std::numeric_limits<double>::max();
+      for (auto &source : heat_sources)
+      {
+        if (!source->get_scan_path().is_finished())
+        {
+          scan_path_end = false;
+          // This functions waits for the scan path file to be updated
+          // before reading the file.
+          source->get_scan_path().read_file();
+          // Update the current_end_time
+          double scan_path_end_time =
+              source->get_scan_path().get_segment_list().back().end_time;
+          if (current_end_time > scan_path_end_time)
+            current_end_time = scan_path_end_time;
+        }
+      }
+      current_scan_path_end = current_end_time;
+      if (scan_path_end &&
+          (current_scan_path_end != std::numeric_limits<double>::max()))
+        duration = current_scan_path_end;
+
+      std::tie(material_deposition_boxes, deposition_times, deposition_cos,
+               deposition_sin) =
+          adamantine::create_material_deposition_boxes<dim>(geometry_database,
+                                                            heat_sources);
+    }
+
     if ((time + time_step) > duration)
       time_step = duration - time;
 
@@ -1115,9 +1180,6 @@ run(MPI_Comm const &communicator, boost::property_tree::ptree const &database,
     }
 
     // Add material if necessary.
-    // We use an epsilon to get the "expected" behavior when the deposition
-    // time and the time match should match exactly but don't because of
-    // floating point accuracy.
     timers[adamantine::add_material_activate].start();
 #ifdef ADAMANTINE_WITH_CALIPER
     CALI_MARK_BEGIN("activation");
@@ -1898,9 +1960,9 @@ run_ensemble(MPI_Comm const &global_communicator,
   bool const scan_path_for_duration =
       time_stepping_database.get("scan_path_for_duration", false);
   // PropertyTreeInput time_stepping.duration
-  double const duration = scan_path_for_duration
-                              ? std::numeric_limits<double>::max()
-                              : time_stepping_database.get<double>("duration");
+  double duration = scan_path_for_duration
+                        ? std::numeric_limits<double>::max()
+                        : time_stepping_database.get<double>("duration");
   // PropertyTreeInput post_processor.time_steps_between_output
   unsigned int const time_steps_output =
       post_processor_database.get("time_steps_between_output", 1);
@@ -1930,6 +1992,30 @@ run_ensemble(MPI_Comm const &global_communicator,
   if (global_rank == 0)
     std::cout << "Starting the main time stepping loop..." << std::endl;
 
+  // If the duration is derived from the scan path, we get the time of the last
+  // segment. If the scan path file contains SCAN_PATH_END, we set the final
+  // duration.
+  double current_scan_path_end = 0;
+  if (scan_path_for_duration)
+  {
+    bool scan_path_end = true;
+    double current_end_time = std::numeric_limits<double>::max();
+    // We assume that all the scan paths are identical for all the ensemble
+    // members.
+    for (auto &source : heat_sources_ensemble[0])
+    {
+      double scan_path_end_time =
+          source->get_scan_path().get_segment_list().back().end_time;
+      if (current_end_time > scan_path_end_time)
+        current_end_time = scan_path_end_time;
+      if (!source->get_scan_path().is_finished())
+        scan_path_end = false;
+    }
+    current_scan_path_end = current_end_time;
+    if (scan_path_end)
+      duration = current_scan_path_end;
+  }
+
 #ifdef ADAMANTINE_WITH_CALIPER
   CALI_CXX_MARK_LOOP_BEGIN(main_loop_id, "main_loop");
 #endif
@@ -1938,6 +2024,56 @@ run_ensemble(MPI_Comm const &global_communicator,
 #ifdef ADAMANTINE_WITH_CALIPER
     CALI_CXX_MARK_LOOP_ITERATION(main_loop_id, n_time_step - 1);
 #endif
+
+    // If we use scan_path_for_duration, we may need to read the scan path
+    // file once again.
+    // We use an epsilon to get the "expected" behavior when the deposition
+    // time and the time match should match exactly but don't because of
+    // floating point accuracy.
+    double const time_step_tol = time_step * 1e-6;
+    // The condition is written in such a way that it avoids the subtraction of
+    // a large number (current_scan_path_end) with a much smaller one
+    // (time_step_tol).
+    if (scan_path_for_duration &&
+        (time - current_scan_path_end > -time_step_tol))
+    {
+      // Check if we have reached the end of the file. If not, read the
+      // updated scan path file. We assume that the scan paths are identical
+      // for all the heat sources and thus, we can use
+      // heat_sources_ensemble[0] to get the material deposition boxes and
+      // times. We still need every ensemble member to read the scan path in
+      // order to compute the correct heat sources.
+      bool scan_path_end = true;
+      double current_end_time = std::numeric_limits<double>::max();
+      for (unsigned int member = 0; member < local_ensemble_size; ++member)
+      {
+        for (auto &source : heat_sources_ensemble[member])
+        {
+          if (!source->get_scan_path().is_finished())
+          {
+            scan_path_end = false;
+            // This functions waits for the scan path file to be updated
+            // before reading the file.
+            source->get_scan_path().read_file();
+            // Update the current_end_time
+            double scan_path_end_time =
+                source->get_scan_path().get_segment_list().back().end_time;
+            if (current_end_time > scan_path_end_time)
+              current_end_time = scan_path_end_time;
+          }
+        }
+      }
+      current_scan_path_end = current_end_time;
+      if (scan_path_end &&
+          (current_scan_path_end != std::numeric_limits<double>::max()))
+        duration = current_scan_path_end;
+
+      std::tie(material_deposition_boxes, deposition_times, deposition_cos,
+               deposition_sin) =
+          adamantine::create_material_deposition_boxes<dim>(
+              geometry_database, heat_sources_ensemble[0]);
+    }
+
     if ((time + time_step) > duration)
       time_step = duration - time;
 
@@ -1978,64 +2114,8 @@ run_ensemble(MPI_Comm const &global_communicator,
     // time and the time match should match exactly but don't because of
     // floating point accuracy.
     timers[adamantine::add_material_activate].start();
-    double const time_step_tol = time_step * 1e-6;
     if (time - activation_time_end > -time_step_tol)
     {
-      // If we use scan_path_for_duration, we may need to read the scan path
-      // file once again.
-      if (scan_path_for_duration)
-      {
-        // Check if we have reached the end of current scan path.
-        bool need_updated_scan_path = false;
-        {
-          for (auto &source : heat_sources_ensemble[0])
-          {
-            if (time >
-                source->get_scan_path().get_segment_list().back().end_time)
-            {
-              need_updated_scan_path = true;
-              break;
-            }
-          }
-        }
-
-        if (need_updated_scan_path)
-        {
-          // Check if we have reached the end of the file. If not, read the
-          // updated scan path file. We assume that the scan paths are identical
-          // for all the heat sources and thus, we can use
-          // heat_sources_ensemble[0] to get the material deposition boxes and
-          // times. We still need every ensemble member to read the scan path in
-          // order to compute the correct heat sources.
-          bool scan_path_end = true;
-          for (unsigned int member = 0; member < local_ensemble_size; ++member)
-          {
-            for (auto &source : heat_sources_ensemble[member])
-            {
-              if (!source->get_scan_path().is_finished())
-              {
-                scan_path_end = false;
-                // This functions waits for the scan path file to be updated
-                // before reading the file.
-                source->get_scan_path().read_file();
-              }
-            }
-          }
-
-          // If we have reached the end of scan path file for all the heat
-          // sources, we just exit.
-          if (scan_path_end)
-          {
-            break;
-          }
-
-          std::tie(material_deposition_boxes, deposition_times, deposition_cos,
-                   deposition_sin) =
-              adamantine::create_material_deposition_boxes<dim>(
-                  geometry_database, heat_sources_ensemble[0]);
-        }
-      }
-
       auto activation_start =
           std::lower_bound(deposition_times.begin(), deposition_times.end(),
                            time - time_step_tol) -
