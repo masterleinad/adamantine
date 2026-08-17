@@ -105,7 +105,8 @@
     "method": "forward_euler",
     "scan_path_for_duration": false,
     "duration": 8000,
-    "time_step": 1e-3
+    "time_step": 1e-3,
+    "mechanical_time_step_factor": 100
   },
 
   "post_processor":

@@ -102,7 +102,7 @@
   "time_stepping":
   {
     "method": "forward_euler",
-    "scan_path_for_duration": true,
+    "scan_path_for_duration": false,
     "time_step": 1e-3,
     "mechanical_time_step_factor": 10
   },

@@ -195,9 +195,11 @@ Geometry<dim>::Geometry(
             face->set_boundary_id(1);
             double z = face->center()[2];
             if (z < bottom)
-              z = bottom;
+              bottom = z;
           }
       }
+
+      std::cout << "Detected bottom at " << bottom << std::endl;
 
       for (auto cell : _triangulation.active_cell_iterators())
       {
